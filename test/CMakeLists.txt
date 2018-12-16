@@ -6,8 +6,8 @@ add_executable(
 
 target_link_libraries(
 	_bigint_test
+	bigint
 	${CONAN_LIBS}
-	#bigint
 )
 
 enable_testing()
