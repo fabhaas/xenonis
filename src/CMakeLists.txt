@@ -2,7 +2,6 @@
 add_library(
 	bigint
 	bigint.cpp
-	bigint.hpp
 )
 
 target_link_libraries(
