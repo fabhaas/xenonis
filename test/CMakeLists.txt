@@ -10,9 +10,7 @@ target_link_libraries(
 	${CONAN_LIBS}
 )
 
-enable_testing()
-
 add_test(
-	bigint_test
-	_bigint_test
+	NAME bigint_test
+	COMMAND _bigint_test
 )
