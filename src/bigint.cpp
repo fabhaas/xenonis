@@ -4,6 +4,7 @@
  *	\brief implementation of bigint class
  */
 #include "bigint.hpp"
+#include "algorithms.hpp"
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -27,12 +28,14 @@ constexpr std::array<uint64_t, 16> p16 = {1,
 
 namespace numeric {
     template <typename data_type, class vector_allocator>
-    bigint<data_type, vector_allocator>::bigint(data_type n) noexcept {
+    bigint<data_type, vector_allocator>::bigint(data_type n) noexcept
+	{
         data.push_back(n);
     }
 
     template <typename data_type, typename vector_allocator>
-    bigint<data_type, vector_allocator>::bigint(std::int64_t n) noexcept {
+    bigint<data_type, vector_allocator>::bigint(std::int64_t n) noexcept
+	{
         auto is_min = false;
 
         if (n == 0) {
@@ -59,8 +62,8 @@ namespace numeric {
             n /= base;
         }
 
-        if (is_min)
-            this->operator--();
+        /*if (is_min)
+            this->operator--();*/
     }
 
     template <typename data_type, typename vector_allocator>
@@ -80,7 +83,7 @@ namespace numeric {
             else if (c >= 97 && c <= 122)
                 c -= 87;
             else
-                throw std::runtime_error("Input string not valid!");
+                throw std::invalid_argument("Input string not valid!");
         });
 
         constexpr std::uint8_t block_size = sizeof(data_type) * 2;
@@ -98,4 +101,20 @@ namespace numeric {
             }
         }
     }
+
+	template<typename data_type, class vector_allocator>
+	bigint<data_type, vector_allocator>& bigint<data_type, vector_allocator>::operator*=(bigint other) noexcept
+	{
+		std::vector<data_container_type> results(other.data.size());
+
+		#pragma omp parallel for
+		for (size_type i = 0; i < other.data.size(); ++i)
+			results[i] = rshift<data_type>(mult_with_digit(data, other.data[i]), i);
+
+		sum_vec(results, data);
+
+		is_signed = is_signed != other.is_signed;
+
+		return *this;
+	}
 } // namespace numeric
