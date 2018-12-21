@@ -1,4 +1,4 @@
-//(C) 2018 fahaas
+// ---------- (C) 2018 fahaas ----------
 /*!
  *	\file bigint.hpp
  *	\brief A definition of the bigint class.
@@ -6,7 +6,9 @@
  */
 #pragma once
 
-#include <boost/integer.hpp>
+#include "bigint_config.hpp"
+
+#include "integer_traits.hpp"
 #include <boost/operators.hpp>
 #include <limits>
 #include <string>
@@ -15,7 +17,7 @@
 
 namespace numeric {
 
-#ifdef GNUC
+#ifdef USE_UINT128
     using uint128_t = unsigned __int128; //!< unsigned 128-bit integer
 #endif
 
@@ -24,13 +26,13 @@ namespace numeric {
                    boost::unit_steppable<bigint<data_type, vector_allocator>> {
         static_assert(std::is_integral<data_type>::value && std::is_unsigned<data_type>::value,
                       "Only unsigned integers are supported");
-#ifndef GNUC
+#ifndef USE_UINT128
         static_assert(!std::is_same<data_type, std::uint64_t>::value, "Not supported when not using gcc or clang");
 #endif
       protected:
-        using data_container_type = std::vector<data_type, vector_allocator>;                //!< the type of data
-        using base_type = typename boost::uint_t<sizeof(data_type) * 16 /* = 2*8 */>::exact; //!< the type of base
-        data_container_type data; //!< container containing the data
+        using data_container_type = std::vector<data_type, vector_allocator>; //!< the type of data
+        using base_type = typename traits::get_doubled<data_type>::type;      //!< the type of base
+        data_container_type data;                                             //!< container containing the data
 
         /*!
                 \brief Complements the data.
@@ -80,15 +82,15 @@ namespace numeric {
     };
 
     template <typename data_type, class vector_allocator = std::allocator<data_type>>
-    std::ostream& operator<<(std::ostream& out, const bigint<data_type, vector_allocator>& b) {
+    std::ostream& operator<<(std::ostream& out, const bigint<data_type, vector_allocator>& b)
+    {
         return out << b.to_string();
     }
 
     template class bigint<std::uint8_t>;
     template class bigint<std::uint16_t>;
     template class bigint<std::uint32_t>;
-#ifdef GNUC
+#ifdef USE_UINT128
     template class bigint<std::uint64_t>; // only supported when using gcc or clang
-#endif                                  
-
+#endif
 } // namespace numeric

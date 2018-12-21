@@ -1,16 +1,16 @@
-#(C) 2018 fahaas
-add_executable(
+# ---------- (C) 2018 fahaas ----------
+add_executable (
 	_bigint_test
 	bigint_test_main.cpp
 )
 
-target_link_libraries(
+target_link_libraries (
 	_bigint_test
 	bigint
 	${CONAN_LIBS}
 )
 
-add_test(
+add_test (
 	NAME bigint_test
 	COMMAND _bigint_test
 )

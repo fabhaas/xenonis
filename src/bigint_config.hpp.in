@@ -1,0 +1,10 @@
+// ---------- (C) 2018 fahaas ----------
+#pragma once
+
+#define bigint_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define bigint_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define bigint_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define bigint_VERSION_STR "@PROJECT_VERSION@"
+
+#cmakedefine USE_OPENMP
+#cmakedefine USE_UINT128

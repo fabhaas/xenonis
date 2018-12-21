@@ -1,4 +1,4 @@
-//(C) 2018 fahaas
+// ---------- (C) 2018 fahaas ----------
 /*!
  *	\file bigint.cpp
  *	\brief implementation of bigint class
@@ -29,13 +29,13 @@ constexpr std::array<uint64_t, 16> p16 = {1,
 namespace numeric {
     template <typename data_type, class vector_allocator>
     bigint<data_type, vector_allocator>::bigint(data_type n) noexcept
-	{
+    {
         data.push_back(n);
     }
 
     template <typename data_type, typename vector_allocator>
     bigint<data_type, vector_allocator>::bigint(std::int64_t n) noexcept
-	{
+    {
         auto is_min = false;
 
         if (n == 0) {
@@ -102,19 +102,19 @@ namespace numeric {
         }
     }
 
-	template<typename data_type, class vector_allocator>
-	bigint<data_type, vector_allocator>& bigint<data_type, vector_allocator>::operator*=(bigint other) noexcept
-	{
-		std::vector<data_container_type> results(other.data.size());
+    template <typename data_type, class vector_allocator>
+    bigint<data_type, vector_allocator>& bigint<data_type, vector_allocator>::operator*=(bigint other) noexcept
+    {
+        std::vector<data_container_type> results(other.data.size());
 
-		#pragma omp parallel for
-		for (size_type i = 0; i < other.data.size(); ++i)
-			results[i] = rshift<data_type>(mult_with_digit(data, other.data[i]), i);
+#pragma omp parallel for
+        for (size_type i = 0; i < other.data.size(); ++i)
+            results[i] = algorithms::rshift<data_type>(algorithms::mult_with_digit(data, other.data[i]), i);
 
-		sum_vec(results, data);
+        algorithms::sum_vec(results, data);
 
-		is_signed = is_signed != other.is_signed;
+        is_signed = is_signed != other.is_signed;
 
-		return *this;
-	}
+        return *this;
+    }
 } // namespace numeric
