@@ -7,6 +7,7 @@ add_executable (
 target_link_libraries (
 	_bigint_test
 	bigint
+	gmp
 	${CONAN_LIBS}
 )
 

@@ -1,6 +1,7 @@
 // ---------- (C) 2018 fahaas ----------
 #pragma once
 
+//#define _GLIBCXX_USE_CXX11_ABI 0
 #define bigint_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
 #define bigint_VERSION_MINOR @PROJECT_VERSION_MINOR@
 #define bigint_VERSION_PATCH @PROJECT_VERSION_PATCH@
@@ -8,3 +9,7 @@
 
 #cmakedefine USE_OPENMP
 #cmakedefine USE_UINT128
+
+#ifdef USE_UINT128
+using uint128_t = unsigned __int128;
+#endif

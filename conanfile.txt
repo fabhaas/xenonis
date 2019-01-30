@@ -1,8 +1,10 @@
 [requires]
 boost/1.68.0@conan/stable
-
-[options]
-boost:shared=False
+Catch2/2.5.0@catchorg/stable
+fmt/5.2.1@bincrafters/stable
 
 [generators]
 cmake
+
+[options]
+boost:shared=False
