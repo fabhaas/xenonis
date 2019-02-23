@@ -4,9 +4,9 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace numeric::traits {
+namespace xenonis::traits {
 
-#ifdef USE_UINT128
+#ifdef XENONIS_USE_UINT128
     using uint128_t = unsigned __int128;
 #endif
 
@@ -16,15 +16,16 @@ namespace numeric::traits {
             std::is_same<T, std::uint8_t>::value, std::uint16_t,
             typename std::conditional<
                 std::is_same<T, std::uint16_t>::value, std::uint32_t,
-                typename std::conditional<std::is_same<T, std::uint32_t>::value, std::uint64_t,
-                                          typename std::conditional<std::is_same<T, std::uint64_t>::value,
-#ifdef USE_UINT128
-                                                                    uint128_t
+                typename std::conditional<
+                    std::is_same<T, std::uint32_t>::value, std::uint64_t,
+                    typename std::conditional<std::is_same<T, std::uint64_t>::value,
+#ifdef XENONIS_USE_UINT128
+                                              uint128_t
 #else
-                                                                    void
-#pragma error "Not supported when not using GCC or Clang"
+                                              void
+#error Not supported when not using GCC or Clang
 #endif
-                                                                    ,
-                                                                    void>::type>::type>::type>::type;
+                                              ,
+                                              void>::type>::type>::type>::type;
     };
-} // namespace numeric::traits
+} // namespace xenonis::traits

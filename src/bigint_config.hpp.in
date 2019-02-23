@@ -7,8 +7,8 @@
 #define bigint_VERSION_PATCH @PROJECT_VERSION_PATCH@
 #define bigint_VERSION_STR "@PROJECT_VERSION@"
 
-#cmakedefine USE_OPENMP
-#cmakedefine USE_UINT128
+#cmakedefine XENONIS_USE_OPENMP
+#cmakedefine XENONIS_USE_UINT128
 
 #ifdef USE_UINT128
 using uint128_t = unsigned __int128;

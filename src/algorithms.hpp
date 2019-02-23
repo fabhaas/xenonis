@@ -15,14 +15,184 @@
 #include <type_traits>
 #include <vector>
 
-namespace numeric::algorithms {
+namespace xenonis::algorithms {
+    // definitions
+    /*!
+     * \brief Appends count elements to the front
+     */
+    template <typename data_type, class container_type>
+    container_type rshift(const container_type& data, decltype(data.size()) count);
+
+    /*!
+     * \brief Removes all redundant zeros. z.B 0 1 2 -> 1 2
+     */
+    template <class container_type> void remove_zeros(container_type& data);
+
+    template <class container_type> bool greater(const container_type& a, const container_type& b, bool or_equal = false);
+
+    template <class container_type> bool less(const container_type& a, const container_type& b, bool or_equal = false);
+
+    template <typename data_type, class container_type>
+    container_type hex_add(const container_type& a, const container_type& b);
+
+    template <typename data_type, class container_type>
+    container_type hex_sub(const container_type& a, const container_type& b);
+
+    template <typename data_type, class container_type>
+    container_type hex_mul(const container_type& a, const container_type& b);
+
+    template <typename data_type, class container_type>
+    container_type hex_div(const container_type& a, const container_type& b);
+
+    // implementations
+    template <typename data_type, class container_type>
+    container_type rshift(const container_type& data, decltype(data.size()) count)
+    {
+        container_type tmp(data.size() + count, 0);
+        std::copy(data.begin(), data.end(), tmp.begin() + count);
+        return tmp;
+    }
+
+    template <class container_type> void remove_zeros(container_type& data)
+    {
+        auto first = data.rbegin();
+        auto last = data.rend();
+
+        for (; first != last; ++first)
+            if (*first != 0)
+                break;
+
+        data.resize(last - first - (first == last)); //data.size() must not be 0
+    }
+
+    template <class container_type> bool greater(const container_type& a, const container_type& b, bool or_equal)
+    {
+        if (a.size() != b.size())
+            return a.size() > b.size();
+
+        auto a_first = a.rbegin();
+        auto a_last = a.rend();
+        auto b_first = b.rbegin();
+
+        for (; a_first != a_last; ++a_first, ++b_first) {
+            if (*a_first != *b_first)
+                return *a_first > *b_first;
+        }
+        return or_equal; //a == b
+    }
+
+    template <class container_type> bool less(const container_type& a, const container_type& b, bool or_equal)
+    {
+        if (a.size() != b.size())
+            return a.size() < b.size();
+
+        auto a_first = a.rbegin();
+        auto a_last = a.rend();
+        auto b_first = b.rbegin();
+
+        for (; a_first != a_last; ++a_first, ++b_first) {
+            if (*a_first != *b_first)
+                return *a_first < *b_first;
+        }
+        return or_equal; //a == b
+    }
+
+    template <typename data_type, class container_type>
+    container_type hex_add(const container_type& a, const container_type& b)
+    {
+        assert(a.size() >= b.size());
+
+        container_type c;
+        c.resize(a.size()+1);
+
+        auto a_first = a.begin();
+        auto a_last = a.end();
+        auto b_first = b.begin();
+        auto b_last = b.end();
+        auto c_first = c.begin();
+
+        bool carry = false;
+        for (; b_first != b_last; ++a_first, ++b_first, ++c_first) {
+            *c_first = *a_first + *b_first + carry;
+            carry = carry ? *c_first <= *a_first || *c_first <= *b_first
+                          : *c_first < *a_first || *c_first < *b_first;
+        }
+
+        if (carry) {
+            for (; a_first != a_last; ++a_first, ++c_first) {
+                *c_first = *a_first + 1;
+                if (*c_first > *a_first) {
+                    std::copy(++a_first, a_last, ++c_first);
+                    carry = false;
+                    break;
+                }
+            }
+
+            if (!carry)
+                c.pop_back();
+            else
+                c.back() = 1;
+        }
+        else {
+            std::copy(a_first, a_last, c_first);
+        }
+
+        return c;
+    }
+
+    template <typename data_type, class container_type>
+    container_type hex_sub(const container_type& a, const container_type& b)
+    {
+        assert(a.size() >= b.size());
+
+        container_type c;
+        c.resize(a.size());
+
+        auto a_first = a.begin();
+        auto a_last = a.end();
+        auto b_first = b.begin();
+        auto b_last = b.end();
+        auto c_first = c.begin();
+
+        bool carry = false;
+        for (; b_first != b_last; ++a_first, ++b_first, ++c_first) {
+            *c_first = *a_first - *b_first - carry;
+            carry = carry ? *c_first >= *a_first
+                          : *c_first > *a_first;
+        }
+
+        if (carry) {
+            for (; a_first != a_last; ++a_first, ++c_first) {
+                *c_first = *a_first - 1;
+                if (*c_first < *a_first) {
+                    std::copy(++a_first, a_last, ++c_first);
+                    carry = false;
+                    break;
+                }
+            }
+
+            assert(!carry);
+        }
+        else {
+            std::copy(a_first, a_last, c_first);
+        }
+
+        algorithms::remove_zeros(c);
+        return c;
+    }
+} // namespace xenonis::algorithms
+
+/*namespace numeric::algorithms {
     using default_size_type = std::size_t;
     template <typename data_type> using default_container_type = std::vector<data_type>;
 
-    template <typename data_type, class container_type, typename size_type>
+    /*template <typename data_type, class container_type, typename size_type>
     container_type rshift(const container_type& data, size_type count);
 
-    template <typename T> void remove_zeros(T& container)
+    /*!
+        \brief Removes all redundant zeros.
+
+    /*template <typename T> void remove_zeros(T& container)
     {
         auto first = container.rbegin();
         auto last = container.rend();
@@ -129,10 +299,12 @@ namespace numeric::algorithms {
 
         assert(a.size() % 2 == 0 && c.size() % 2 == 0);
 
-        container_class b(std::make_move_iterator(a.begin() + a.size() / 2), std::make_move_iterator(a.end()));
+        container_class b(std::make_move_iterator(a.begin() + a.size() / 2),
+                          std::make_move_iterator(a.end()));
         a.erase(a.begin() + a.size() / 2, a.end());
 
-        container_class d(std::make_move_iterator(c.begin() + c.size() / 2), std::make_move_iterator(c.end()));
+        container_class d(std::make_move_iterator(c.begin() + c.size() / 2),
+                          std::make_move_iterator(c.end()));
         c.erase(c.begin() + c.size() / 2, c.end());
 
         assert(a.size() == b.size() && c.size() == d.size() && a.size() == c.size());
@@ -141,13 +313,15 @@ namespace numeric::algorithms {
         container_class bd = mult<data_type>(b, d);
         container_class ab_cd = mult<data_type>(add(a, b), add(c, d));
 
-        return add(add(rshift<data_type>(ac, shift_count), rshift<data_type>(sub(ab_cd, add(ac, bd)), shift_count / 2)),
+        return add(add(rshift<data_type>(ac, shift_count),
+                       rshift<data_type>(sub(ab_cd, add(ac, bd)), shift_count / 2)),
                    bd);
     }
 
     template <typename data_type, class container_type = default_container_type<data_type>,
               typename d_data_type = typename traits::get_doubled<data_type>::type,
-              class d_container_type = default_container_type<d_data_type>, typename size_type = std::size_t>
+              class d_container_type = default_container_type<d_data_type>,
+              typename size_type = std::size_t>
     container_type mult_with_digit(const container_type& data, data_type digit)
     {
         d_container_type tmp(data.size(), static_cast<d_data_type>(0));
@@ -188,7 +362,7 @@ namespace numeric::algorithms {
         return result;
     }
 
-    template <typename data_type, class container_type, typename size_type>
+    /*template <typename data_type, class container_type, typename size_type>
     container_type rshift(const container_type& data, size_type count)
     {
         container_type tmp(data.size() + count, 0);
@@ -198,8 +372,8 @@ namespace numeric::algorithms {
 
     // requires that a.size() == b.size() == c.size()
     // a and b should have a redundant zero at a.back() or b.back()
-    template <typename data_type,
-              class container_type = default_container_type<data_type> /*, typename size_type = default_size_type*/>
+    template <typename data_type, class container_type = default_container_type<
+                                      data_type> /*, typename size_type = default_size_type>
     void add(const container_type& a, const container_type& b, container_type& c)
     {
         /* the same but without iterators
@@ -215,7 +389,7 @@ namespace numeric::algorithms {
             }
             if (result[i] < data[i] || result[i] < other.data[i])
                 carry = true;
-        }*/
+        }
 
         auto a_first = a.begin();
         auto a_last = a.end();
@@ -273,4 +447,4 @@ namespace numeric::algorithms {
             }
         }
     }
-} // namespace numeric::algorithms
+} // namespace xenonis::algorithms*/

@@ -9,7 +9,7 @@ constexpr std::array<std::uint64_t, 5> ran_numbers = {3, 7, 13, 17, 23};
 constexpr std::array<std::uint64_t, 2> bases = {10, 16};
 constexpr std::array<std::uint64_t, 5> exponents = {1, 10, 100, 1000, 10000};
 
-#define BIGINT_BENCH(bigint_t, bigint_t_name, name, op)                                                                \
+#define BIGINT_OPERATOR_BENCH(bigint_t, bigint_t_name, name, op)                                                                \
     auto name##_bench = [&s](auto ran, auto base, auto exp) {                                                          \
         mpz_t mp_a;                                                                                                    \
         mpz_t mp_b;                                                                                                    \
@@ -30,7 +30,7 @@ constexpr std::array<std::uint64_t, 5> exponents = {1, 10, 100, 1000, 10000};
         mpz_clear(mp_b);                                                                                               \
                                                                                                                        \
         s.add(std::string(#bigint_t_name) + '_' + #name + '_' + std::to_string(base) + '^' + std::to_string(exp) +     \
-                  '*' + std::to_string(ran),                                                                           \
+                  '*' + std::to_string(ran) + '_' + std::to_string(a.size()),                                          \
               [a = std::move(a), b = std::move(b)]() { a op b; });                                                     \
     };
 
@@ -39,8 +39,8 @@ int main(/*int argc, char** argv*/)
     geiger::init();
     geiger::suite<> s;
 
-    BIGINT_BENCH(numeric::bigint<std::uint64_t>, u64, add, +);
-    BIGINT_BENCH(numeric::bigint<std::uint64_t>, u64, mult, *);
+    BIGINT_OPERATOR_BENCH(xenonis::hex_bigint64, u64, add, +);
+    //BIGINT_OPERATOR_BENCH(numeric::bigint64, u64, mult, *);
 
     auto add_benches = [&](auto& bench) {
         for (auto base : bases)
@@ -50,10 +50,9 @@ int main(/*int argc, char** argv*/)
     };
 
     add_benches(add_bench);
-    add_benches(mult_bench);
+    //add_benches(mult_bench);
 
     s.set_printer<geiger::printer::console<>>();
     s.run();
-
     return 0;
 }

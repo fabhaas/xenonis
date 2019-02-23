@@ -1,7 +1,7 @@
 # ---------- (C) 2018 fahaas ----------
 cmake_minimum_required (VERSION 3.10)
 
-project (bigint
+project (xenonis
     VERSION 0.0.5 #is based on older projects
 )
 
@@ -9,8 +9,8 @@ project (bigint
 include (CTest)
 
 #options
-#option (USE_OPENMP "Use OpenMP for hardware acceleration" ON)
-option (USE_UINT128 "Use __int128 extension" ON)
+#option (XENONIS_USE_OPENMP "Use OpenMP for hardware acceleration" ON)
+option (XENONIS_USE_UINT128 "Use __int128 extension" ON)
 
 #CXX configuration
 set (CMAKE_CXX_STANDARD 17)
