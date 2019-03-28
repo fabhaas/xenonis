@@ -8,6 +8,7 @@ target_link_libraries (
 	_bigint_test
 	bigint
 	gmp
+        gmpxx
 	${CONAN_LIBS}
 )
 

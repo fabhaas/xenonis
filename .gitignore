@@ -1,6 +1,8 @@
 build
+compile_commands.json
 .vs
 bigint.kdev4
 .kdev4
 CMakeLists.txt.user
 doc
+.directory

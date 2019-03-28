@@ -1,6 +1,11 @@
 # ---------- (C) 2018 fahaas ----------
 
-set (BIGINT_HEADERS bigint.hpp bigint_base.hpp algorithms.hpp integer_traits.hpp bigint_data.hpp)
+set (BIGINT_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/bigint.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithms.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/integer_traits.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/bigint_data.hpp)
+
 set (BIGINT_EXPORT_HEADERS bigint.hpp)
 
 if (USE_OPENMP)
@@ -17,9 +22,15 @@ add_library (
     INTERFACE
 )
 
+target_sources(
+    bigint
+    INTERFACE
+        ${BIGINT_HEADERS}
+    )
+
 target_include_directories(bigint
     INTERFACE
-    ${BIGINT_HEADERS}
+    .
 )
 
 install (
@@ -27,6 +38,6 @@ install (
     DESTINATION lib64
 )
 install (
-    FILES ${BIGINT_EXPORT_HEADERS}
+    FILES ${BIGINT_HEADERS}
     DESTINATION include
 )

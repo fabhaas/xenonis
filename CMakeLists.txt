@@ -9,7 +9,7 @@ project (xenonis
 include (CTest)
 
 #options
-#option (XENONIS_USE_OPENMP "Use OpenMP for hardware acceleration" ON)
+option (XENONIS_USE_OPENMP "Use OpenMP for hardware acceleration" ON)
 option (XENONIS_USE_UINT128 "Use __int128 extension" ON)
 
 #CXX configuration
@@ -17,9 +17,9 @@ set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -Wall")
 
-#if (USE_OPENMP)
-#    add_compile_options ("-fopenmp")
-#endif ()
+if (USE_OPENMP)
+    add_compile_options ("-fopenmp")
+endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options ("-fdiagnostics-color=always") #enable colored output when using ninja
@@ -28,7 +28,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif ()
 
 #conan configuration
-# Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"

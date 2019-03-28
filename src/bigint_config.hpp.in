@@ -10,6 +10,6 @@
 #cmakedefine XENONIS_USE_OPENMP
 #cmakedefine XENONIS_USE_UINT128
 
-#ifdef USE_UINT128
+#ifdef XENONIS_USE_UINT128
 using uint128_t = unsigned __int128;
 #endif
