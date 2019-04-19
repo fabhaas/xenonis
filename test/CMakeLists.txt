@@ -1,4 +1,4 @@
-# ---------- (C) 2018 fahaas ----------
+# ---------- (C) 2018, 2019 fahaas ----------
 add_executable (
 	_bigint_test
 	bigint_test_main.cpp
@@ -7,6 +7,7 @@ add_executable (
 target_link_libraries (
 	_bigint_test
 	bigint
+        ${XENONIS_REQUIRED_LIBS}
 	gmp
         gmpxx
 	${CONAN_LIBS}

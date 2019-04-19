@@ -1,1 +1,1 @@
-clang-format -style=file -i src/*.cpp src/*.hpp test/*.cpp
+clang-format -style=file -i include/*.hpp test/*.cpp bench/*.cpp

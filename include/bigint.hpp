@@ -1,16 +1,17 @@
-// ---------- (C) 2018 fahaas ----------
+// ---------- (C) 2018, 2019 fahaas ----------
 /*!
  *	\file bigint.hpp
  *	\brief A definition of the bigint class.
- *  \details NOTE: Requires at least a 64-bit unsigned integer resulting in no support for 32-bit
- *builds.
+ *  \details NOTE: Requires at least a 64-bit unsigned integer resulting in no support for 32-bit builds.
  */
 #pragma once
 
 #include "bigint_config.hpp"
 
-#include "algorithms.hpp"
-#include "bigint_data.hpp"
+#include "algorithms/arithmetic.hpp"
+#include "algorithms/compare.hpp"
+#include "algorithms/conversion.hpp"
+#include "container/bigint_data.hpp"
 #include "integer_traits.hpp"
 #include <algorithm>
 #include <cassert>
@@ -136,26 +137,99 @@ namespace xenonis {
                 std::string_view(hex_str.data() + m_sign, hex_str.size() - m_sign));
         }
 
-        bigint& operator++() noexcept {}
-
-        bigint& operator--() noexcept {}
-
-        bigint& operator+=(const bigint& other) noexcept
+        bigint& operator++()
         {
+            if (m_sign) {
+                if (m_data.size() == 1 && m_data.front() == 1) {
+                    m_data.front() = 0;
+                    m_sign = false;
+                    return;
+                }
+                algorithms::hex_decrement(m_data.begin(), m_data.end());
+            } else {
+                if (algorithms::hex_increment(m_data.begin(), m_data.end()))
+                    m_data.push_back(1);
+            }
+        }
+
+        bigint& operator--()
+        {
+            if (!m_sign) {
+                if (m_data.size() == 1 && m_data.front() == 0) {
+                    m_data.front() = 1;
+                    m_sign = true;
+                    return;
+                }
+                algorithms::hex_decrement(m_data.begin(), m_data.end());
+            } else {
+                if (algorithms::hex_increment(m_data.begin(), m_data.end()))
+                    m_data.push_back(1);
+            }
+        }
+
+        bigint& operator++(int)
+        {
+            auto tmp = *this;
+            ++tmp;
+            return tmp;
+        }
+
+        bigint& operator--(int)
+        {
+            auto tmp = *this;
+            --tmp;
+            return tmp;
+        }
+
+        bigint& operator+=(const bigint& other)
+        {
+            auto add = [](const auto& a, const auto& b) {
+                Container tmp(a.size() + 1);
+                tmp.back() = 0;
+                if (algorithms::hex_add(a.cbegin(), b.cbegin(), b.cend(), tmp.begin())) {
+                    std::copy(a.cbegin() + b.size(), a.cend(), tmp.begin() + b.size());
+                    algorithms::hex_increment(tmp.begin() + a.size(), tmp.end());
+                } else {
+                    std::copy(a.begin() + b.size(), a.end(), tmp.begin() + b.size());
+                    tmp.pop_back();
+                }
+                return std::move(tmp);
+            };
+
             if (m_sign == other.m_sign) {
-                if (size() >= other.size())
-                    m_data = algorithms::hex_add<Container>(m_data, other.m_data);
-                else
-                    m_data = algorithms::hex_add<Container>(other.m_data, m_data);
+                if (m_data.size() >= other.m_data.size()) {
+                    if (m_data.size() - 1 >= other.m_data.size()) {
+                        if (algorithms::hex_add(m_data.cbegin(), other.m_data.cbegin(), other.m_data.cend(),
+                                                m_data.begin())) {
+                            if (algorithms::hex_increment(m_data.begin() + other.m_data.size(), m_data.end()))
+                                m_data.push_back(1);
+                        }
+                    } else {
+                        m_data = add(m_data, other.m_data);
+                    }
+                } else {
+                    m_data = add(other.m_data, m_data);
+                }
             } else { // is_signed != other.is_signed
                 if (algorithms::greater<Container>(m_data, other.m_data)) {
-                    m_data = algorithms::hex_sub<Container>(m_data, other.m_data);
+                    if (algorithms::hex_sub_from(m_data.begin(), other.m_data.cbegin(), other.m_data.cend()))
+                        algorithms::hex_decrement(m_data.begin() + other.m_data.size(), m_data.end());
                     // is_signed = is_signed; when is_signed == true then the result has to be <= 0,
                     // else >= 0
                 } else {
-                    m_data = algorithms::hex_sub<Container>(other.m_data, m_data);
+                    Container tmp(other.m_data.size());
+                    if (algorithms::hex_sub(other.m_data.cbegin(), m_data.cbegin(), m_data.cend(), tmp.begin())) {
+                        std::copy(other.m_data.cbegin() + m_data.size(), other.m_data.cend(),
+                                  tmp.begin() + m_data.size());
+                        algorithms::hex_decrement(tmp.begin() + m_data.size(), tmp.end());
+                    } else {
+                        std::copy(other.m_data.cbegin() + m_data.size(), other.m_data.cend(),
+                                  tmp.begin() + m_data.size());
+                    }
+                    m_data = std::move(tmp);
                     m_sign = !m_sign;
                 }
+                algorithms::remove_zeros(m_data);
             }
 
             if (m_data.size() == 1 && m_data.front() == 0)
@@ -164,33 +238,65 @@ namespace xenonis {
             return *this;
         }
 
-        bigint& operator-=(const bigint& other) noexcept
+        bigint& operator-=(const bigint& other)
         {
             // because other is read-only and a copy is expensive, operator-= is implemented without
             // just other.is_signed = !other.is_signed; and calling operator+=
+            auto add = [](const auto& a, const auto& b) {
+                Container tmp(a.size() + 1);
+                tmp.back() = 0;
+                if (algorithms::hex_add(a.cbegin(), b.cbegin(), b.cend(), tmp.begin())) {
+                    std::copy(a.cbegin() + b.size(), a.cend(), tmp.begin() + b.size());
+                    algorithms::hex_increment(tmp.begin() + a.size(), tmp.end());
+                } else {
+                    std::copy(a.begin() + b.size(), a.end(), tmp.begin() + b.size());
+                    tmp.pop_back();
+                }
+                return std::move(tmp);
+            };
+
             if (m_sign != other.m_sign) {
-                if (size() >= other.size())
-                    m_data = algorithms::hex_add<Container>(m_data, other.m_data);
-                else
-                    m_data = algorithms::hex_add<Container>(other.m_data, m_data);
-            } else {
+                if (m_data.size() >= other.m_data.size()) {
+                    if (m_data.size() - 1 >= other.m_data.size()) {
+                        if (algorithms::hex_add(m_data.cbegin(), other.m_data.cbegin(), other.m_data.cend(),
+                                                m_data.begin())) {
+                            if (algorithms::hex_increment(m_data.begin() + other.m_data.size(), m_data.end()))
+                                m_data.push_back(1);
+                        }
+                    } else {
+                        m_data = add(m_data, other.m_data);
+                    }
+                } else {
+                    m_data = add(other.m_data, m_data);
+                }
+            } else { // is_signed != other.is_signed
                 if (algorithms::greater<Container>(m_data, other.m_data)) {
-                    m_data = algorithms::hex_sub<Container>(m_data, other.m_data);
+                    if (algorithms::hex_sub_from(m_data.begin(), other.m_data.cbegin(), other.m_data.cend()))
+                        algorithms::hex_decrement(m_data.begin() + other.m_data.size(), m_data.end());
                     // is_signed = is_signed; when is_signed == true then the result has to be <= 0,
                     // else >= 0
                 } else {
-                    m_data = algorithms::hex_sub<Container>(other.m_data, m_data);
+                    Container tmp(other.m_data.size());
+                    if (algorithms::hex_sub(other.m_data.cbegin(), m_data.cbegin(), m_data.cend(), tmp.begin())) {
+                        std::copy(other.m_data.cbegin() + m_data.size(), other.m_data.cend(),
+                                  tmp.begin() + m_data.size());
+                        algorithms::hex_decrement(tmp.begin() + m_data.size(), tmp.end());
+                    } else {
+                        std::copy(other.m_data.cbegin() + m_data.size(), other.m_data.cend(),
+                                  tmp.begin() + m_data.size());
+                    }
+                    m_data = std::move(tmp);
                     m_sign = !m_sign;
                 }
+                algorithms::remove_zeros(m_data);
             }
 
             if (m_data.size() == 1 && m_data.front() == 0)
                 m_sign = false;
-
             return *this;
         }
 
-        bigint& operator*=(const bigint& other) noexcept
+        bigint& operator*=(const bigint& other)
         {
             if (m_data.size() == 1 && m_data.front() == 0)
                 return *this;
@@ -201,20 +307,20 @@ namespace xenonis {
                 return *this;
             }
 
-            m_data =
-                algorithms::hex_karatsuba_mul<Value, Container, Container>(m_data, other.m_data);
+            m_data = algorithms::hex_karatsuba_mul<Container>(m_data.cbegin(), m_data.cend(), other.m_data.cbegin(),
+                                                              other.m_data.cend());
             m_sign = m_sign != other.m_sign;
             return *this;
         }
 
         bigint& operator/=(const bigint& other) noexcept;
 
-#define BIGINT_ARITHMETIC_OPERTATOR_IMPL(op)                                                       \
-    bigint operator op(const bigint& other) const noexcept                                         \
-    {                                                                                              \
-        auto tmp = *this;                                                                          \
-        tmp op## = other;                                                                          \
-        return tmp;                                                                                \
+#define BIGINT_ARITHMETIC_OPERTATOR_IMPL(op)                                                                           \
+    bigint operator op(const bigint& other) const                                                                      \
+    {                                                                                                                  \
+        auto tmp = *this;                                                                                              \
+        tmp op## = other;                                                                                              \
+        return tmp;                                                                                                    \
     }
 
         BIGINT_ARITHMETIC_OPERTATOR_IMPL(+)
@@ -242,10 +348,7 @@ namespace xenonis {
                 return !m_sign;
         }
 
-        bool operator==(const bigint& other) const noexcept
-        {
-            return m_sign == other.m_sign && m_data == other.m_data;
-        }
+        bool operator==(const bigint& other) const noexcept { return m_sign == other.m_sign && m_data == other.m_data; }
 
         bool operator!=(const bigint& other) const noexcept { return !this->operator==(other); }
 
@@ -272,7 +375,8 @@ namespace xenonis {
             return algorithms::hex_to_string<Value, Container>(m_data, m_sign, lower_case);
         }
 
-        inline size_type size() const { return m_data.size() * sizeof(Value); }
+        inline size_type size() const noexcept { return m_data.size() * sizeof(Value); }
+        const Container& data() const noexcept { return m_data; }
 
         virtual ~bigint() = default;
     };

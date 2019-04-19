@@ -1,4 +1,4 @@
-# ---------- (C) 2018 fahaas ----------
+# ---------- (C) 2018, 2019 fahaas ----------
 cmake_minimum_required (VERSION 3.10)
 
 project (xenonis
@@ -11,14 +11,25 @@ include (CTest)
 #options
 option (XENONIS_USE_OPENMP "Use OpenMP for hardware acceleration" ON)
 option (XENONIS_USE_UINT128 "Use __int128 extension" ON)
+if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
+    option(XENONIS_BUILD_DOC "Build documentation" ON)
+else()
+    option(XENONIS_BUILD_DOC "Build documentation" OFF)
+endif()
+set (XENONIS_REQUIRED_LIBS "")
 
 #CXX configuration
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
-set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -Wall")
+set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -Wall -fno-rtti")
 
-if (USE_OPENMP)
-    add_compile_options ("-fopenmp")
+if (XENONIS_USE_OPENMP)
+    #find_package(OpenMP REQUIRED)
+    add_compile_options (-fopenmp)
+    set (XENONIS_REQUIRED_LIBS ${XENONIS_REQUIRED_LIBS} omp)
+    #add_compile_options (${OpenMP_CXX_FLAGS})
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    #set (XENONIS_REQUIRED_LIBS ${XENONIS_REQUIRED_LIBS} ${OpenMP_CXX_LIBRARIES})
 endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -41,10 +52,32 @@ conan_cmake_run(CONANFILE conanfile.txt
                 BASIC_SETUP
                 BUILD missing)
 
+# check if Doxygen is installed
+if (XENONIS_BUILD_DOC)
+    find_package(Doxygen)
+    if (DOXYGEN_FOUND)
+        # set input and output files
+        set(XENONIS_DOXYGEN_IN ${CMAKE_SOURCE_DIR}/doc/Doxyfile.in)
+        set(XENONIS_DOXYGEN_OUT ${CMAKE_BINARY_DIR}/Doxyfile)
+
+        # request to configure the file
+        configure_file(${XENONIS_DOXYGEN_IN} ${XENONIS_DOXYGEN_OUT} @ONLY)
+        message("Doxygen build started")
+
+        add_custom_target( doc_doxygen ALL
+                           COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                            COMMENT "Generating documentation with Doxygen"
+                            VERBATIM )
+    else (DOXYGEN_FOUND)
+        message("Doxygen need to be installed to generate the doxygen documentation")
+    endif (DOXYGEN_FOUND)
+endif (XENONIS_BUILD_DOC)
+
 #include libraries
 include_directories ("${CMAKE_BINARY_DIR}")
 
 #add subdirectories
-add_subdirectory (src)
+add_subdirectory (include)
 add_subdirectory (test)
 add_subdirectory (bench)

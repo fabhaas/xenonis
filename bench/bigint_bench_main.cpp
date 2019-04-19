@@ -1,57 +1,123 @@
-#include "../src/bigint.hpp"
-#include <array>
-#include <geiger/geiger.h>
-#include <gmp.h>
+// ---------- (C) 2018, 2019 fahaas ----------
+#include <algorithms/arithmetic.hpp>
+#include <benchmark/benchmark.h>
+#include <bigint.hpp>
 #include <gmpxx.h>
+#include <iostream>
+#include <random>
 #include <string>
 
-constexpr std::array<std::uint64_t, 5> ran_numbers = {3, 7, 13, 17, 23};
-constexpr std::array<std::uint64_t, 2> bases = {10, 256};
-constexpr std::array<std::uint64_t, 7> exponents = {1,       4,       128,
-                                                    64 << 4, 64 << 8, 64 << 16 /*, 64l << 20*/};
-
-#define BIGINT_OPERATOR_BENCH(bigint_t, bigint_t_name, name, op)                                   \
-    auto name##_bench = [&s](auto ran, auto base, auto exp) {                                      \
-        mpz_class a;                                                                               \
-        mpz_class b;                                                                               \
-                                                                                                   \
-        mpz_ui_pow_ui(a.get_mpz_t(), base, exp);                                                   \
-        a *= ran;                                                                                  \
-                                                                                                   \
-        mpz_ui_pow_ui(b.get_mpz_t(), base - 1, exp);                                               \
-        b *= (ran + 1);                                                                            \
-                                                                                                   \
-        bigint_t b_a(a.get_str(16));                                                               \
-        bigint_t b_b(b.get_str(16));                                                               \
-                                                                                                   \
-        s.add(std::string(#bigint_t_name) + '_' + #name + '_' + std::to_string(base) + '^' +       \
-                  std::to_string(exp) + '*' + std::to_string(ran) + '_' +                          \
-                  std::to_string(b_a.size()),                                                      \
-              [a = std::move(b_a), b = std::move(b_b)]() { a op b; });                             \
-    };
-
-int main(/*int argc, char** argv*/)
+std::string gen_ran_num(std::size_t size)
 {
-    geiger::init();
-    geiger::suite<> s;
+    std::string ret(size, '\0');
 
-    BIGINT_OPERATOR_BENCH(xenonis::hex_bigint, u64, add, +);
-    BIGINT_OPERATOR_BENCH(xenonis::hex_bigint, u64, sub, -);
-    BIGINT_OPERATOR_BENCH(xenonis::hex_bigint, u64, mul, *);
+    std::random_device ran_device;
+    std::default_random_engine ran_engine(ran_device());
+    std::uniform_int_distribution<char> ran_dist(0, 15);
 
-    auto add_benches = [&](auto& bench) {
-        for (auto base : bases)
-            for (auto exp : exponents)
-                for (auto ran : ran_numbers)
-                    bench(ran, base, exp);
+    auto conv = [](char c) -> char {
+        if (c < 10)
+            return c + 48;
+        else
+            return c + 87;
     };
 
-    add_benches(add_bench);
-    add_benches(sub_bench);
-    add_benches(mul_bench);
+    for (auto& c : ret)
+        c = conv(ran_dist(ran_engine));
 
-    s.set_printer<geiger::printer::console<>>();
-    s.run();
-
-    return 0;
+    return ret;
 }
+
+static void BM_add(benchmark::State& state)
+{
+    state.SetComplexityN(state.range(0));
+
+    xenonis::hex_bigint64 b_a(gen_ran_num(static_cast<std::size_t>(state.range(0))));
+    xenonis::hex_bigint64 b_b(gen_ran_num(static_cast<std::size_t>(state.range(0))));
+
+    for (auto _ : state)
+        benchmark::DoNotOptimize(b_a + b_b);
+}
+BENCHMARK(BM_add)->RangeMultiplier(2)->Range(1, 8 << 16)->Complexity(benchmark::oN);
+
+static void BM_mul(benchmark::State& state)
+{
+    state.SetComplexityN(state.range(0));
+
+    xenonis::hex_bigint64 b_a(gen_ran_num(static_cast<std::size_t>(state.range(0))));
+    xenonis::hex_bigint64 b_b(gen_ran_num(static_cast<std::size_t>(state.range(0))));
+
+    for (auto _ : state)
+        benchmark::DoNotOptimize(b_a * b_b);
+}
+BENCHMARK(BM_mul)->RangeMultiplier(2)->Range(1, 8 << 16)->Complexity(benchmark::oNSquared);
+
+static void BM_karatsuba_mul(benchmark::State& state)
+{
+    state.SetComplexityN(state.range(0));
+
+    xenonis::hex_bigint64 b_a(gen_ran_num(static_cast<std::size_t>(state.range(0))));
+    xenonis::hex_bigint64 b_b(gen_ran_num(static_cast<std::size_t>(state.range(0))));
+
+    auto a = b_a.data();
+    auto b = b_b.data();
+    decltype(a) c;
+
+    for (auto _ : state) {
+        c = xenonis::algorithms::hex_karatsuba_mul<std::uint64_t>(a.begin(), a.end(), b.begin(), b.end());
+        benchmark::DoNotOptimize(c);
+    }
+
+    state.counters["in_bytes"] =
+        benchmark::Counter(b_a.size(), benchmark::Counter::kDefaults, benchmark::Counter::kIs1024);
+    state.counters["res_bytes"] = benchmark::Counter(c.size() * sizeof(std::uint64_t), benchmark::Counter::kDefaults,
+                                                     benchmark::Counter::kIs1024);
+}
+BENCHMARK(BM_karatsuba_mul)->RangeMultiplier(2)->Range(1, 8 << 16)->UseRealTime()->Complexity();
+
+static void BM_gmp_mul(benchmark::State& state)
+{
+    state.SetComplexityN(state.range(0));
+    mpz_class mp_a(gen_ran_num(static_cast<std::size_t>(state.range(0))), 16);
+    mpz_class mp_b(gen_ran_num(static_cast<std::size_t>(state.range(0))), 16);
+
+    mpz_t c;
+    mpz_init(c);
+
+    for (auto _ : state) {
+        mpz_mul(c, mp_a.get_mpz_t(), mp_b.get_mpz_t());
+        benchmark::DoNotOptimize(c);
+    }
+
+    state.counters["in_bytes"] = benchmark::Counter(mpz_size(mp_a.get_mpz_t()) * sizeof(mp_limb_t),
+                                                    benchmark::Counter::kDefaults, benchmark::Counter::kIs1024);
+    state.counters["res_bytes"] =
+        benchmark::Counter(mpz_size(c) * sizeof(mp_limb_t), benchmark::Counter::kDefaults, benchmark::Counter::kIs1024);
+
+    mpz_clear(c);
+}
+BENCHMARK(BM_gmp_mul)->RangeMultiplier(2)->Range(1, 8 << 16)->Complexity();
+
+static void BM_naive_mul(benchmark::State& state)
+{
+    state.SetComplexityN(state.range(0));
+    xenonis::hex_bigint64 b_a(gen_ran_num(static_cast<std::size_t>(state.range(0))));
+    xenonis::hex_bigint64 b_b(gen_ran_num(static_cast<std::size_t>(state.range(0))));
+
+    auto a = b_a.data();
+    auto b = b_b.data();
+    decltype(a) c;
+
+    for (auto _ : state) {
+        c = xenonis::algorithms::hex_naive_mul<decltype(a)>(a.begin(), a.end(), b.begin(), b.end());
+        benchmark::DoNotOptimize(c);
+    }
+
+    state.counters["in_bytes"] =
+        benchmark::Counter(b_a.size(), benchmark::Counter::kDefaults, benchmark::Counter::kIs1024);
+    state.counters["res_bytes"] = benchmark::Counter(c.size() * sizeof(std::uint64_t), benchmark::Counter::kDefaults,
+                                                     benchmark::Counter::kIs1024);
+}
+BENCHMARK(BM_naive_mul)->RangeMultiplier(8)->Range(1, 8 << 16)->Complexity();
+
+BENCHMARK_MAIN();

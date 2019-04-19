@@ -1,19 +1,22 @@
-# ---------- (C) 2018 fahaas ----------
+# ---------- (C) 2018, 2019 fahaas ----------
 
 set (BIGINT_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/bigint.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/algorithms.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithms/arithmetic.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithms/compare.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithms/conversion.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithms/util.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/integer_traits.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/bigint_data.hpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/container/bigint_data.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/container/data_view.hpp
+    )
 
-set (BIGINT_EXPORT_HEADERS bigint.hpp)
-
-if (USE_OPENMP)
+if (XENONIS_USE_OPENMP)
     set (EXTRA_LIBS gomp)
 endif ()
 
 configure_file (
-    "${PROJECT_SOURCE_DIR}/src/bigint_config.hpp.in"
+    "${PROJECT_SOURCE_DIR}/include/bigint_config.hpp.in"
     "${PROJECT_BINARY_DIR}/bigint_config.hpp"
 )
 
