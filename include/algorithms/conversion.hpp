@@ -2,21 +2,21 @@
 #pragma once
 
 #include "util.hpp"
-#include <cstdint>
-#include <cstddef>
 #include <algorithm>
-#include <string_view>
-#include <string>
+#include <cstddef>
+#include <cstdint>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
 namespace xenonis::algorithms {
     template <typename Value, class InContainer>
-    std::string hex_to_string(const InContainer& a, bool is_signed, bool lower_case = true);
+    std::string to_string(const InContainer& a, bool is_signed, bool lower_case = true);
 
-    template <typename Value, class OutContainer> OutContainer hex_from_string(const std::string_view str);
+    template <typename Value, class OutContainer> OutContainer from_string(const std::string_view str);
 
     template <typename Value, class InContainer>
-    std::string hex_to_string(const InContainer& data, bool is_signed, bool lower_case)
+    std::string to_string(const InContainer& data, bool is_signed, bool lower_case)
     {
         using size_type = decltype(data.size());
         std::string ret(data.size() * sizeof(Value) * 2, '\0');
@@ -57,7 +57,7 @@ namespace xenonis::algorithms {
         return ret;
     }
 
-    template <typename Value, class OutContainer> OutContainer hex_from_string(const std::string_view str)
+    template <typename Value, class OutContainer> OutContainer from_string(const std::string_view str)
     {
         auto conv = [](auto c) {
             if (c >= 48 && c <= 57)
@@ -89,4 +89,6 @@ namespace xenonis::algorithms {
 
         return ret;
     }
+
+    template <typename OutValue, typename InValue, class OutContainer> OutContainer from_uint(InValue n) {}
 } // namespace xenonis::algorithms

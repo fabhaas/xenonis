@@ -2,7 +2,7 @@
 cmake_minimum_required (VERSION 3.10)
 
 project (xenonis
-    VERSION 0.0.5 #is based on older projects
+    VERSION 0.0.7 #is based on older projects
 )
 
 #include modules
@@ -16,20 +16,21 @@ if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 else()
     option(XENONIS_BUILD_DOC "Build documentation" OFF)
 endif()
-set (XENONIS_REQUIRED_LIBS "")
+set (XENONIS_REQUIRED_LIBS ${CMAKE_SOURCE_DIR}/build/asm/add.o)
 
 #CXX configuration
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
-set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -Wall -fno-rtti")
+set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -DNDEBUG")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17") #-masm=intel
 
 if (XENONIS_USE_OPENMP)
     #find_package(OpenMP REQUIRED)
-    add_compile_options (-fopenmp)
-    set (XENONIS_REQUIRED_LIBS ${XENONIS_REQUIRED_LIBS} omp)
-    #add_compile_options (${OpenMP_CXX_FLAGS})
-    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    #set (XENONIS_REQUIRED_LIBS ${XENONIS_REQUIRED_LIBS} ${OpenMP_CXX_LIBRARIES})
+    #add_compile_options (-fopenmp)
+    #set (XENONIS_REQUIRED_LIBS ${XENONIS_REQUIRED_LIBS} omp)
+    add_compile_options (${OpenMP_CXX_FLAGS})
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (XENONIS_REQUIRED_LIBS ${XENONIS_REQUIRED_LIBS} ${OpenMP_CXX_LIBRARIES})
 endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -46,11 +47,13 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
-conan_add_remote(NAME bincrafters INDEX 1
-            URL https://api.bintray.com/conan/bincrafters/public-conan)
+#conan_add_remote(NAME bincrafters INDEX 1
+#	URL https://api.bintray.com/conan/bincrafters/public-conan)
+#conan_add_remote(NAME mpusz
+#	    URL https://api.bintray.com/conan/mpusz/conan-mpusz)
 conan_cmake_run(CONANFILE conanfile.txt
-                BASIC_SETUP
-                BUILD missing)
+    BASIC_SETUP
+    BUILD missing)
 
 # check if Doxygen is installed
 if (XENONIS_BUILD_DOC)

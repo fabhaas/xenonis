@@ -13,3 +13,7 @@
 #ifdef XENONIS_USE_UINT128
 using uint128_t = unsigned __int128;
 #endif
+
+#ifdef XENONIS_USE_UINT128
+    using uint128_t = unsigned __int128;
+#endif

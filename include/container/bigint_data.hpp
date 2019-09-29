@@ -13,19 +13,17 @@ namespace xenonis::internal {
     template <typename Value, class Allocator = std::allocator<Value>> class bigint_data {
         using size_type = std::size_t;
         friend class data_view<Value, size_type>;
-        //Allocator m_alloc;
-        size_type m_size;
-        size_type m_capacity;
+        Allocator m_alloc;
+        size_type m_size = 0;
+        size_type m_capacity = 0;
         Value* m_ptr = nullptr;
         auto allocate(size_type size)
         {
-            //return m_alloc.allocate(size);
-            return static_cast<Value*>(calloc(size, sizeof(Value)));
+            return m_alloc.allocate(size);
         }
         void deallocate()
         {
-            free(m_ptr);
-            //m_alloc.deallocate(m_ptr, m_capacity);
+            m_alloc.deallocate(m_ptr, m_capacity);
         }
 
       public:
@@ -55,7 +53,7 @@ namespace xenonis::internal {
             if (m_ptr != nullptr)
                 deallocate();
 
-            m_ptr = allocate(m_capacity);
+            m_ptr = allocate(other.m_capacity);
             m_size = other.m_size;
             m_capacity = other.m_capacity;
             std::copy(other.cbegin(), other.cend(), begin());

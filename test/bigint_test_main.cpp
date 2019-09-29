@@ -131,7 +131,7 @@ template <class bigint_type> class util_bigint_test : public ::testing::Test {
     const std::size_t ran_count = 1000;
 };
 
-using bigint_test_types = ::testing::Types<xenonis::hex_bigint>;
+using bigint_test_types = ::testing::Types<xenonis::bigint64>;
 TYPED_TEST_CASE(arithmetic_bigint_test, bigint_test_types);
 TYPED_TEST_CASE(bool_bigint_test, bigint_test_types);
 TYPED_TEST_CASE(util_bigint_test, bigint_test_types);

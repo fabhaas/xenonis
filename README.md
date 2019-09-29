@@ -18,6 +18,7 @@ A basic script to configure and build the library looks like this:
 ```bash
 git clone https://gitlab.com/fahaas/bigint.git #clone repo
 cd bigint
+sh setup.sh
 mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G <generator> <options> #generate build files
@@ -40,6 +41,7 @@ Then to configure and build the library run this:
 ```bash
 git clone https://gitlab.com/fahaas/bigint.git #clone repo
 cd bigint
+sh setup.sh
 mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release #generate build files in release mode
@@ -60,8 +62,13 @@ Then to configure and build the library run this:
 ```bash
 git clone https://gitlab.com/fahaas/bigint.git #clone repo
 cd bigint
+sh setup.sh
 mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release #generate build files in release mode
 make
 ```
+
+## TODO
++ check for support for adcx, adox and mulx instruction
++ instead of calling XENONIS_add, integrate the code using inline assembly, which improves portability

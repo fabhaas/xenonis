@@ -1,4 +1,4 @@
-// ---------- (C) 2018 fahaas ----------
+// ---------- (C) 2018, 2019 fahaas ----------
 #pragma once
 
 #include "bigint_config.hpp"
