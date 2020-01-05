@@ -10,9 +10,11 @@
 #include "util.hpp"
 //#include <tbb/task_group.h> // Intel Thread Building Blocks library for parallelization, may be used in the future
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <type_traits>
@@ -40,7 +42,11 @@ namespace xenonis::algorithms {
      *  \returns carry
      */
     template <class InIter, class OutIter>
-    constexpr inline bool sub(InIter a_first, InIter b_first, InIter b_last, OutIter c_first);
+#if !(defined(__GNUC__) && defined(__amd64__))
+    constexpr
+#endif
+        inline bool
+        sub(InIter a_first, InIter b_first, InIter b_last, OutIter c_first);
 
     /*!
      *  Subtracts b from a and writes the result to a. Requires a.size() >= b.size().
@@ -50,7 +56,11 @@ namespace xenonis::algorithms {
      *  \returns carry
      */
     template <class InIter, class InOutIter>
-    constexpr inline bool sub_from(InOutIter a_first, InIter b_first, InIter b_last);
+#if !(defined(__GNUC__) && defined(__amd64__))
+    constexpr
+#endif
+        inline bool
+        sub_from(InOutIter a_first, InIter b_first, InIter b_last);
 
     /*!
      *  Increments a by 1.
@@ -70,6 +80,12 @@ namespace xenonis::algorithms {
 
     /*!
      *  Multiplies a with b and returns the result.
+     *  \returns the result
+     */
+    template <typename Value> constexpr inline std::array<Value, 2> base_mul(Value a, Value b);
+
+    /*!
+     *  Multiplies a with b and returns the result.
      *  \details Uses the naive method to multiply. Complexity: O(n^2)
      *  \param a_first iterator pointing to the first element of a.
      *  \param a_last iterator pointing to the last element of a.
@@ -78,7 +94,11 @@ namespace xenonis::algorithms {
      *  \returns the result
      */
     template <class OutContainer, class InIter>
-    constexpr OutContainer naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last);
+#if !(defined(__GNUC__) && defined(__amd64__))
+    constexpr
+#endif
+        OutContainer
+        naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last);
 
     /*!
      *  Multiplies a with b and writes the result to out.
@@ -91,13 +111,12 @@ namespace xenonis::algorithms {
      *  \param out_last iterator pointing to the last element of out.
      *  \param the size of a
      */
-    template <class OutIter, class InIter, typename size_type = std::size_t>
+    template <class OutIter, class InIter>
 #if !(defined(__GNUC__) && defined(__amd64__))
     constexpr
 #endif
         void
-        naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last, OutIter out_first, OutIter out_last,
-                  size_type a_size);
+        naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last, OutIter out_first);
 
     /*!
      *  Multiplies a with b and returns the result.
@@ -110,7 +129,11 @@ namespace xenonis::algorithms {
      *  \returns the result
      */
     template <class OutContainer, class InIter>
-    constexpr OutContainer karatsuba_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last);
+#if !(defined(__GNUC__) && defined(__amd64__))
+    constexpr
+#endif
+        OutContainer
+        karatsuba_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last);
 
     template <typename Value, class InContainer, class OutContainer = InContainer>
     OutContainer div(const InContainer& a, const InContainer& b);
@@ -372,19 +395,71 @@ namespace xenonis::algorithms {
     }
 
     template <class InIter, class OutIter>
-    constexpr inline bool sub(InIter a_first, InIter b_first, InIter b_last, OutIter c_first)
+#if !(defined(__GNUC__) && defined(__amd64__))
+    constexpr
+#endif
+        inline bool
+        sub(InIter a_first, InIter b_first, InIter b_last, OutIter c_first)
     {
+#if defined(__GNUC__) && defined(__amd64__)
+        std::uint64_t carry{0}, size = std::distance(b_first, b_last);
+        asm(R"(
+        xor %%rsi, %%rsi
+        movq %[max], %%rbx
+        subq %[size], %%rbx
+        addq $1, %%rbx
+        %=1:
+        movq (%[a], %%rsi, 8), %%rax
+        sbbq (%[b], %%rsi, 8), %%rax
+        movq %%rax, (%[c], %%rsi, 8)
+        inc %%rsi
+        inc %%rbx
+        jno %=1b
+        sbbq $0, %[carry]
+        )"
+            : [ c ] "+r"(c_first), [ carry ] "+r"(carry) // DO NOT USE = constraint when using pointer
+            : [ a ] "r"(a_first), [ b ] "r"(b_first), [ size ] "r"(size),
+              [ max ] "r"(std::numeric_limits<std::int64_t>::max())
+            : "rax", "rbx", "rcx", "rsi", "memory");
+        return carry;
+#else
         bool carry = false;
         for (; b_first != b_last; ++a_first, ++b_first, ++c_first) {
             *c_first = *a_first - *b_first - carry;
             carry = carry ? *c_first >= *a_first : *c_first > *a_first;
         }
         return carry;
+#endif
     }
 
     template <class InIter, class InOutIter>
-    constexpr inline bool sub_from(InOutIter a_first, InIter b_first, InIter b_last)
+#if !(defined(__GNUC__) && defined(__amd64__))
+    constexpr
+#endif
+        inline bool
+        sub_from(InOutIter a_first, InIter b_first, InIter b_last)
     {
+#if defined(__GNUC__) && defined(__amd64__)
+        std::uint64_t carry{0}, size = std::distance(b_first, b_last);
+        asm(R"(
+        xor %%rsi, %%rsi
+        movq %[max], %%rbx
+        subq %[size], %%rbx
+        addq $1, %%rbx
+        %=1:
+        movq (%[a], %%rsi, 8), %%rax
+        sbbq (%[b], %%rsi, 8), %%rax
+        movq %%rax, (%[a], %%rsi, 8)
+        inc %%rsi
+        inc %%rbx
+        jno %=1b
+        sbbq $0, %[carry]
+        )"
+            : [ a ] "+r"(a_first), [ carry ] "+r"(carry) // DO NOT USE = constraint when using pointer
+            : [ b ] "r"(b_first), [ size ] "r"(size), [ max ] "r"(std::numeric_limits<std::int64_t>::max())
+            : "rax", "rbx", "rcx", "rsi", "memory");
+        return carry;
+#else
         bool carry = false;
         for (; b_first != b_last; ++a_first, ++b_first) {
             auto tmp = *a_first;
@@ -392,6 +467,7 @@ namespace xenonis::algorithms {
             carry = carry ? *a_first >= tmp : *a_first > tmp;
         }
         return carry;
+#endif
     }
 
     template <class InIter> constexpr inline bool increment(InIter a_first, InIter a_last)
@@ -410,25 +486,43 @@ namespace xenonis::algorithms {
         return true;
     }
 
-    template <class OutIter, class InIter, typename size_type = std::size_t>
+    template <typename Value> constexpr inline std::array<Value, 2> base_mul(Value a, Value b)
+    {
+        using doubled = typename traits::uint<Value>::doubled;
+        using halved = typename traits::uint<Value>::halved;
+
+        if constexpr (std::is_same_v<doubled, void>) {
+            halved res[4] = {0}; // do not forget to initialize with 0
+            auto* a_halved = reinterpret_cast<halved*>(&a);
+            auto* b_halved = reinterpret_cast<halved*>(&b);
+            naive_mul(a_halved, a_halved + 2, b_halved, b_halved + 2, res, res + 4);
+
+            std::array<Value, 2> ret;
+            std::memcpy(ret.data(), res, sizeof(Value) * 2);
+            return ret;
+        } else {
+            doubled res = static_cast<doubled>(a) * b;
+            std::array<Value, 2> ret;
+            std::memcpy(ret.data(), &res, sizeof(doubled));
+            return ret;
+        }
+    }
+
+    template <class OutIter, class InIter>
 #if !(defined(__GNUC__) && defined(__amd64__))
     constexpr
 #endif
         void
-        naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last, OutIter out_first, OutIter out_last)
+        naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last, OutIter out_first)
     {
 #if defined(__GNUC__) && defined(__amd64__)
-        using value_type = std::remove_const_t<std::remove_reference_t<decltype(*a_first)>>;
-
         const auto a_size = std::distance(a_first, a_last);
-        value_type carry{0}, i_out{0};
 
-        for (; b_first != b_last; ++b_first, ++out_first) {
-            const auto digit = *b_first;
-            if (digit == 0)
-                continue;
+        if (a_size % 2 == 0) {
+            for (; b_first != b_last; ++b_first, ++out_first) {
+                if (*b_first == 0)
+                    continue;
 
-            if (a_size % 2 == 0) {
                 asm(R"(
                 xor %%rax, %%rax
                 xor %%rcx, %%rcx
@@ -477,17 +571,9 @@ namespace xenonis::algorithms {
                 adcx 8(%[out],%%rsi,8), %%r11
                 adox %%rax, %%r11
                 mov %%r11, 8(%[out],%%rsi,8)
-
-                mov $0, %[carry]
-                adcx %%rax, %[carry]
-                adox %%rax, %[carry]
-
-                add $1, %%rsi
-                mov %%rsi, %[i_out]
                 )"
-                    : [ out ] "+r"(out_first), [ carry ] "+r"(carry), [ i_out ] "=rm"(i_out)
-                    : [ in ] "r"(a_first), [ digit ] "rm"(digit),
-                      [ size ] "r"(a_size - static_cast<size_type>(a_size % 2 == 0))
+                    : [ out ] "+r"(out_first)
+                    : [ in ] "r"(a_first), [ digit ] "rm"(*b_first), [ size ] "r"(a_size - 1)
                     : "rax", "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory");
 
                 // same in Intel syntax:
@@ -539,19 +625,17 @@ namespace xenonis::algorithms {
                 // adcx r11, QWORD PTR 8[%[out]+rsi*8]
                 // adox r11, rax
                 // mov QWORD PTR 8[%[out]+rsi*8], r11
-                //
-                // mov %[carry], 0
-                // adcx %[carry], rax
-                // adox %[carry], rax
-                //
-                // add rsi, 1
-                // mov %[i_out], rsi
                 //)"
-                //: [out] "+r" (out_first), [carry] "+r" (carry), [i_out] "=rm" (i_out)
-                //: [in] "r" (a_first), [digit] "rm" (digit), [size] "r" (a_size - static_cast<size_type>(a_size % 2 ==
-                // 0)) : "rax", "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory"
+                //: [out] "+r" (out_first)
+                //: [in] "r" (a_first), [digit] "rm" (digit), [size] "r" (a_size - 1)
+                //: "rax", "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory"
                 //);
-            } else {
+            }
+        } else {
+            for (; b_first != b_last; ++b_first, ++out_first) {
+                if (*b_first == 0)
+                    continue;
+
                 asm(R"(
                 xor %%rax, %%rax
                 xor %%rcx, %%rcx
@@ -593,16 +677,9 @@ namespace xenonis::algorithms {
                 adcx %%rax, %%r9
                 adox %%rcx, %%r9
                 mov %%r9, (%[out],%%rsi,8)
-
-                mov $0, %%rax
-                mov $0, %[carry]
-                adcx %%rax, %[carry]
-                adox %%rax, %[carry]
-
-                mov %%rsi, %[i_out]
                 )"
-                    : [ out ] "+r"(out_first), [ carry ] "+r"(carry), [ i_out ] "=rm"(i_out)
-                    : [ in ] "r"(a_first), [ digit ] "rm"(digit), [ size ] "r"(a_size)
+                    : [ out ] "+r"(out_first)
+                    : [ in ] "r"(a_first), [ digit ] "rm"(*b_first), [ size ] "r"(a_size)
                     : "rax", "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory");
 
                 // same in Intel syntax:
@@ -647,111 +724,168 @@ namespace xenonis::algorithms {
                 // adcx r9, rax
                 // adox r9, rcx
                 // mov QWORD PTR [%[out]+rsi*8], r9
-                //
-                // mov rax, 0
-                // mov %[carry], 0
-                // adcx %[carry], rax
-                // adox %[carry], rax
-                //
-                // mov %[i_out], rsi
                 //)"
-                //: [out] "+r" (out_first), [carry] "+r" (carry), [i_out] "=rm" (i_out)
+                //: [out] "+r" (out_first)
                 //: [in] "r" (a_first), [digit] "rm" (digit), [size] "r" (a_size)
                 //: "rax", "rcx", "rdx", "rbx", "rsi", "r8", "r9", "r10", "r11", "memory"
                 //);
             }
-
-            if (carry)
-                increment(out_first + i_out, out_last);
         }
+// #else
+//         using value_type = std::remove_const_t<std::remove_reference_t<decltype(*a_first)>>;
+//         using doubled = typename traits::uint<value_type>::doubled;
+//
+//         const auto a_size = std::distance(a_first, a_last);
+//
+//         doubled n0 = 0;
+//         doubled n1 = 0;
+//         auto* n0_ptr = reinterpret_cast<value_type*>(&n0);
+//         auto* n1_ptr = reinterpret_cast<value_type*>(&n1);
+//
+//         value_type carry{0};
+//
+//         for (; b_first != b_last; ++b_first, ++out_first) {
+//             const auto digit = *b_first;
+//             if (digit == 0)
+//                 continue;
+//             auto in_first = a_first;
+//             auto ret_first = out_first;
+//
+//             n0 = static_cast<doubled>(*(in_first++)) * digit;
+//             *ret_first += n0_ptr[0];
+//             carry = *(ret_first++) < n0_ptr[0];
+//
+//             const auto in_last = a_last - (a_size % 2 == 0);
+//             while (in_first != in_last) {
+//                 n1 = static_cast<doubled>(*(in_first++)) * digit;
+//                 *ret_first += n0_ptr[1] + carry;
+//                 carry = carry ? *ret_first <= n0_ptr[1] : *ret_first < n0_ptr[1];
+//                 *ret_first += n1_ptr[0];
+//                 carry += carry ? *(ret_first++) <= n1_ptr[0] : *(ret_first++) < n1_ptr[0];
+//
+//                 n0 = static_cast<doubled>(*(in_first++)) * digit;
+//                 *ret_first += n1_ptr[1] + carry;
+//                 carry = carry ? *ret_first <= n1_ptr[1] : *ret_first < n1_ptr[1];
+//                 *ret_first += n0_ptr[0];
+//                 carry += carry ? *(ret_first++) <= n0_ptr[0] : *(ret_first++) < n0_ptr[0];
+//             }
+//
+//             if (a_size % 2 == 0) {
+//                 n1 = static_cast<doubled>(*(in_first++)) * digit;
+//                 *ret_first += n0_ptr[1] + carry;
+//                 carry = carry ? *ret_first <= n0_ptr[1] : *ret_first < n0_ptr[1];
+//                 *ret_first += n1_ptr[0];
+//                 carry += carry ? *(ret_first++) <= n1_ptr[0] : *(ret_first++) < n1_ptr[0];
+//
+//                 *ret_first += n1_ptr[1] + carry;
+//
+//                 if (carry) {
+//                     if (*(ret_first++) <= n1_ptr[1])
+//                         increment(ret_first, out_last);
+//                 } else {
+//                     if (*(ret_first++) < n1_ptr[1])
+//                         increment(ret_first, out_last);
+//                 }
+//             } else {
+//                 *ret_first += n0_ptr[1] + carry;
+//
+//                 if (carry) {
+//                     if (*(ret_first++) <= n0_ptr[1])
+//                         increment(ret_first, out_last);
+//                 } else {
+//                     if (*(ret_first++) < n0_ptr[1])
+//                         increment(ret_first, out_last);
+//                 }
+//             }
+//         }
 #else
         using value_type = std::remove_const_t<std::remove_reference_t<decltype(*a_first)>>;
-        using doubled = typename traits::uint<value_type>::doubled;
 
-        doubled n0 = 0;
-        doubled n1 = 0;
-        auto* n0_ptr = reinterpret_cast<value_type*>(&n0);
-        auto* n1_ptr = reinterpret_cast<value_type*>(&n1);
-
-        value_type carry{0};
+        std::array<value_type, 2> n;
+        value_type carry;
 
         for (; b_first != b_last; ++b_first, ++out_first) {
             const auto digit = *b_first;
             if (digit == 0)
                 continue;
-            auto in_first = a_first;
-            auto ret_first = out_first;
+            auto in_first{a_first};
+            auto ret_first{out_first};
+            carry = 0;
 
-            n0 = static_cast<doubled>(*(in_first++)) * digit;
-            *ret_first += n0_ptr[0];
-            carry = *(ret_first++) < n0_ptr[0];
+            while (in_first != a_last) {
+                n = base_mul(*(in_first++), digit);
 
-            const auto in_last = a_last - (a_size % 2 == 0);
-            while (in_first != in_last) {
-                n1 = static_cast<doubled>(*(in_first++)) * digit;
-                *ret_first += n0_ptr[1] + carry;
-                carry = carry ? *ret_first <= n0_ptr[1] : *ret_first < n0_ptr[1];
-                *ret_first += n1_ptr[0];
-                carry += carry ? *(ret_first++) <= n1_ptr[0] : *(ret_first++) < n1_ptr[0];
+                *ret_first += n[0];
+                carry += carry ? *(ret_first++) <= n[0] : *(ret_first++) < n[0];
 
-                n0 = static_cast<doubled>(*(in_first++)) * digit;
-                *ret_first += n1_ptr[1] + carry;
-                carry = carry ? *ret_first <= n1_ptr[1] : *ret_first < n1_ptr[1];
-                *ret_first += n0_ptr[0];
-                carry += carry ? *(ret_first++) <= n0_ptr[0] : *(ret_first++) < n0_ptr[0];
-            }
-
-            if (a_size % 2 == 0) {
-                n1 = static_cast<doubled>(*(in_first++)) * digit;
-                *ret_first += n0_ptr[1] + carry;
-                carry = carry ? *ret_first <= n0_ptr[1] : *ret_first < n0_ptr[1];
-                *ret_first += n1_ptr[0];
-                carry += carry ? *(ret_first++) <= n1_ptr[0] : *(ret_first++) < n1_ptr[0];
-
-                *ret_first += n1_ptr[1] + carry;
-
-                if (carry) {
-                    if (*(ret_first++) <= n1_ptr[1])
-                        increment(ret_first, out_last);
-                } else {
-                    if (*(ret_first++) < n1_ptr[1])
-                        increment(ret_first, out_last);
-                }
-            } else {
-                *ret_first += n0_ptr[1] + carry;
-
-                if (carry) {
-                    if (*(ret_first++) <= n0_ptr[1])
-                        increment(ret_first, out_last);
-                } else {
-                    if (*(ret_first++) < n0_ptr[1])
-                        increment(ret_first, out_last);
-                }
+                *ret_first += n[1] + carry;
+                carry = carry ? *ret_first <= n[1] : *ret_first < n[1];
             }
         }
 #endif
     }
 
+    template <class OutIter, class InIter>
+    void simple_asm_naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last, OutIter out_first)
+    {
+        const auto a_size = std::distance(a_first, a_last);
+
+        for (; b_first != b_last; ++b_first, ++out_first) {
+            const auto digit = *b_first;
+            if (digit == 0)
+                continue;
+
+            asm(R"(
+    	    xor %%rax, %%rax
+	        xor %%rsi, %%rsi
+	        mov %[digit], %%rdx
+	        %=1:
+	            mulx (%[in],%%rsi,8), %%r8, %%r9
+	            mov (%[out],%%rsi,8), %%r10
+	            mov 8(%[out],%%rsi,8), %%r11
+	            add %%r8, %%r10
+	            mov %%r10, (%[out],%%rsi,8)
+	            adcx %%rax, %%r11
+	            adcx %%r9, %%r11
+	            mov %%r11, 8(%[out],%%rsi,8)
+
+	            setc %%al
+	            movzx %%al, %%rax
+	            inc %%rsi
+	            cmp %[size], %%rsi
+	            jl %=1b
+            )"
+                : [ out ] "+r"(out_first)
+                : [ in ] "r"(a_first), [ digit ] "rm"(digit), [ size ] "r"(a_size)
+                : "rax", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory");
+        }
+    }
+
     template <class OutContainer, class InIter>
-    constexpr OutContainer naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last)
+#if !(defined(__GNUC__) && defined(__amd64__))
+    constexpr
+#endif
+        OutContainer
+        naive_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last)
     {
         const auto a_size = std::distance(a_first, a_last);
         const auto b_size = std::distance(b_first, b_last);
 
         OutContainer ret(a_size + b_size, 0);
 
-        naive_mul(a_first, a_last, b_first, b_last, ret.begin(), ret.end());
+        naive_mul(a_first, a_last, b_first, b_last, ret.begin());
 
         remove_zeros(ret);
         return ret;
     }
 
     template <class OutContainer, class InIter>
-    constexpr OutContainer karatsuba_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last)
+#if !(defined(__GNUC__) && defined(__amd64__))
+    constexpr
+#endif
+        OutContainer
+        karatsuba_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last)
     {
-        using value_type = std::remove_const_t<std::remove_reference_t<decltype(*a_first)>>;
-        using doubled = typename traits::uint<value_type>::doubled;
-
         const auto a_size = std::distance(a_first, a_last);
         const auto b_size = std::distance(b_first, b_last);
 
