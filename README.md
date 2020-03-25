@@ -1,4 +1,5 @@
 # bigint - a C++ bigint implementation
+(C) 2018-2020 Fabian Haas
 
 ## Installation
 
@@ -18,7 +19,7 @@ A basic script to configure and build the library looks like this:
 ```bash
 git clone https://gitlab.com/fahaas/bigint.git #clone repo
 cd bigint
-sh setup.sh
+sh setup.sh # or setup.bat
 mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G <generator> <options> #generate build files
@@ -71,4 +72,3 @@ make
 
 ## TODO
 + check for support for adcx, adox and mulx instruction
-+ instead of calling XENONIS_add, integrate the code using inline assembly, which improves portability
