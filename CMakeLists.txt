@@ -10,6 +10,8 @@ project(
 include(CTest)
 
 # options
+option(XENONIS_BUILD_TESTS "Build the tests" OFF)
+option(XENONIS_BUILD_BENCHMARKS "Build the benchmarks" OFF)
 option(XENONIS_USE_UINT128 "Use __int128 extension" ON)
 option(XENONIS_USE_INLINE_ASM "Use inline assembly" ON)
 if(CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]")
@@ -28,19 +30,21 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
                                              # ninja
 endif()
 
-# conan configuration
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-  message(
-    STATUS
-      "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-  file(
-    DOWNLOAD
-    "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
-    "${CMAKE_BINARY_DIR}/conan.cmake")
-endif()
+if(XENONIS_BUILD_TESTS OR XENONIS_BUILD_BENCHMARKS)
+  # conan configuration
+  if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+    message(
+      STATUS
+        "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+    file(
+      DOWNLOAD
+      "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
+      "${CMAKE_BINARY_DIR}/conan.cmake")
+  endif()
 
-include(${CMAKE_BINARY_DIR}/conan.cmake)
-conan_cmake_run(CONANFILE conanfile.txt BASIC_SETUP BUILD missing)
+  include(${CMAKE_BINARY_DIR}/conan.cmake)
+  conan_cmake_run(CONANFILE conanfile.txt BASIC_SETUP BUILD missing)
+endif()
 
 # check if Doxygen is installed
 if(XENONIS_BUILD_DOC)
@@ -71,5 +75,11 @@ include_directories("${CMAKE_BINARY_DIR}")
 
 # add subdirectories
 add_subdirectory(include)
-add_subdirectory(test)
-add_subdirectory(bench)
+
+if(XENONIS_BUILD_TESTS)
+  add_subdirectory(test)
+endif()
+
+if(XENONIS_BUILD_BENCHMARKS)
+  add_subdirectory(bench)
+endif()
