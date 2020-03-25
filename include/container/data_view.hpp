@@ -1,4 +1,4 @@
-// ---------- (C) 2018, 2019 fahaas ----------
+// ---------- (C) 2018-2020 Fabian Haas ----------
 #pragma once
 
 #include <cassert>

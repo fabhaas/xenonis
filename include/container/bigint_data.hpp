@@ -1,4 +1,4 @@
-// ---------- (C) 2018, 2019 fahaas ----------
+// ---------- (C) 2018-2020 Fabian Haas ----------
 #pragma once
 
 #include <algorithm>
@@ -14,9 +14,9 @@ namespace xenonis::internal {
         using size_type = std::size_t;
         friend class data_view<Value, size_type>;
         Allocator m_alloc;
-        size_type m_size = 0;
-        size_type m_capacity = 0;
-        Value* m_ptr = nullptr;
+        size_type m_size{0};
+        size_type m_capacity{0};
+        Value* m_ptr{nullptr};
         auto allocate(size_type size)
         {
             return m_alloc.allocate(size);
@@ -82,7 +82,7 @@ namespace xenonis::internal {
                 ++m_size;
                 m_ptr[m_size - 1] = val;
             } else {
-                auto* tmp = allocate(m_size + 1);
+                auto* tmp{allocate(m_size + 1)};
                 std::copy(begin(), end(), tmp);
                 deallocate();
 
@@ -102,7 +102,7 @@ namespace xenonis::internal {
                 return;
             }
 
-            auto* tmp = allocate(new_size);
+            auto* tmp{allocate(new_size)};
             std::copy(std::make_move_iterator(begin()), std::make_move_iterator(end()), tmp);
 
             deallocate();
@@ -119,7 +119,7 @@ namespace xenonis::internal {
                 return;
             }
 
-            auto* tmp = allocate(new_size);
+            auto* tmp{allocate(new_size)};
             std::copy(std::make_move_iterator(begin()), std::make_move_iterator(end()), tmp);
 
             for (size_type i = m_size; i < new_size; ++i)

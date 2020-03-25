@@ -1,4 +1,4 @@
-// ---------- (C) 2018, 2019 fahaas ----------
+// ---------- (C) 2018-2020 Fabian Haas ----------
 /*!
  *	\file bigint.hpp
  *	\brief A definition of the bigint class.
@@ -32,20 +32,15 @@ namespace xenonis::internal {
 #endif
       private:
         Container m_data;
-        bool m_sign = false;
+        bool m_sign{false};
         using size_type = decltype(m_data.size());
-        using base_type = typename traits::uint<Value>::doubled;
-        constexpr static Value base_min_one = std::numeric_limits<Value>::max();
-        constexpr static base_type base = static_cast<base_type>(base_min_one) + 1;
+        using base_type = typename traits::uinteger<Value>::doubled;
+        constexpr static Value base_min_one{std::numeric_limits<Value>::max()};
+        constexpr static base_type base{static_cast<base_type>(base_min_one) + 1};
         bigint(Container data, bool sign = false) : m_data(std::move(data)), m_sign(sign) {}
 
       public:
         bigint() noexcept {}
-        bigint(Value n) noexcept
-        {
-            m_data = Container(1);
-            m_data.front() = n;
-        }
 
         bigint(const bigint& other) : m_data(other.m_data), m_sign(other.m_sign) {}
 
@@ -65,56 +60,28 @@ namespace xenonis::internal {
             return *this;
         }
 
-        /*bigint(std::uint64_t n) noexcept
-        {
-            if constexpr (!std::is_same<Value, std::uint64_t>::value) {
-                // would be inefficient to use bitwise operators, because
-                // the process may add redundant zeros requiring a call of remove_zeros() afterwards
-                while (n != 0) {
-                    m_data.push_back(static_cast<Value>(n % base));
-                    n -= n % base;
-                    n /= base;
-                }
-            } else {
-                m_data.push_back(n);
-            }
-        }
+#define BIGINT_INT_CONSTRUCTOR(T)                                                                                      \
+    bigint(T n) noexcept                                                                                               \
+    {                                                                                                                  \
+        auto ret{algorithms::from_int<Value, T, Container>(n)};                                                        \
+        m_sign = ret.first;                                                                                            \
+        m_data = ret.second;                                                                                           \
+    }
 
-        bigint(std::int64_t n) noexcept
-        {
-            if (n == 0) {
-                m_data.push_back(0);
-                m_sign = false;
-                return;
-            }
+        BIGINT_INT_CONSTRUCTOR(std::int64_t)
+        BIGINT_INT_CONSTRUCTOR(std::int32_t)
+        BIGINT_INT_CONSTRUCTOR(std::int16_t)
+        BIGINT_INT_CONSTRUCTOR(std::int8_t)
+#undef BIGINT_INT_CONSTRUCTOR
 
-            std::uint64_t u;
-            if (n < 0) {
-                m_sign = true;
-                if (n == std::numeric_limits<std::int64_t>::min()) {
-                    --n;
-                    n *= -1;
-                    u = static_cast<std::uint64_t>(n);
-                    ++u;
-                } else {
-                    u = static_cast<std::uint64_t>(n * -1);
-                }
-            } else {
-                u = static_cast<std::uint64_t>(n);
-            }
+#define BIGINT_UINT_CONSTRUCTOR(T)                                                                                     \
+    bigint(T n) noexcept { m_data = algorithms::from_uint<Value, T, Container>(n); }
 
-            if constexpr (!std::is_same<Value, std::uint64_t>::value) {
-                // would be inefficient to use bitwise operators, because
-                // the process may add redundant zeros requiring a call of remove_zeros() afterwards
-                while (u != 0) {
-                    m_data.push_back(static_cast<Value>(u % base));
-                    u -= u % base;
-                    u /= base;
-                }
-            } else {
-                m_data.push_back(u);
-            }
-        }*/
+        BIGINT_UINT_CONSTRUCTOR(std::uint64_t)
+        BIGINT_UINT_CONSTRUCTOR(std::uint32_t)
+        BIGINT_UINT_CONSTRUCTOR(std::uint16_t)
+        BIGINT_UINT_CONSTRUCTOR(std::uint8_t)
+#undef BIGINT_UINT_CONSTRUCTOR
 
         bigint(const std::string_view hex_str)
         {
@@ -169,14 +136,14 @@ namespace xenonis::internal {
 
         bigint& operator++(int)
         {
-            auto tmp = *this;
+            auto tmp{*this};
             ++tmp;
             return tmp;
         }
 
         bigint& operator--(int)
         {
-            auto tmp = *this;
+            auto tmp{*this};
             --tmp;
             return tmp;
         }
@@ -194,7 +161,7 @@ namespace xenonis::internal {
                     std::copy(a.begin() + b.size(), a.end(), tmp.begin() + b.size());
                     tmp.pop_back();
                 }
-                return /*std::move(*/ tmp /*)*/;
+                return tmp;
             };
 
             if (m_sign == other.m_sign) {
@@ -400,6 +367,6 @@ namespace xenonis {
     using bigint32 = internal::bigint<std::uint32_t, internal::bigint_data<std::uint32_t>>;
     using bigint16 = internal::bigint<std::uint16_t, internal::bigint_data<std::uint16_t>>;
     using bigint8 = internal::bigint<std::uint8_t, internal::bigint_data<std::uint8_t>>;
-    using bigint = std::conditional<std::is_same_v<typename traits::uint<std::uintmax_t>::doubled, void>,
+    using bigint = std::conditional<std::is_same_v<typename traits::uinteger<std::uintmax_t>::doubled, void>,
                                     internal::bigint<std::uintmax_t, internal::bigint_data<std::uintmax_t>>, bigint32>;
 } // namespace xenonis

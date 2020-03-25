@@ -1,7 +1,6 @@
-// ---------- (C) 2018, 2019 fahaas ----------
+// ---------- (C) 2018-2020 Fabian Haas ----------
 #pragma once
 
-//#define _GLIBCXX_USE_CXX11_ABI 0
 #define bigint_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
 #define bigint_VERSION_MINOR @PROJECT_VERSION_MINOR@
 #define bigint_VERSION_PATCH @PROJECT_VERSION_PATCH@
@@ -9,11 +8,14 @@
 
 #cmakedefine XENONIS_USE_OPENMP
 #cmakedefine XENONIS_USE_UINT128
-
-#ifdef XENONIS_USE_UINT128
-using uint128_t = unsigned __int128;
-#endif
+#cmakedefine XENONIS_USE_INLINE_ASM
 
 #ifdef XENONIS_USE_UINT128
     using uint128_t = unsigned __int128;
+#endif
+
+#ifdef XENONIS_USE_INLINE_ASM
+    #if defined(__GNUC__) && defined(__amd64__)
+        #define XENONIS_INLINE_ASM_AMD64
+    #endif
 #endif

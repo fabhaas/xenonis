@@ -1,4 +1,4 @@
-// ---------- (C) 2018, 2019 fahaas ----------
+// ---------- (C) 2018-2020 Fabian Haas ----------
 #pragma once
 
 #include <algorithm>
@@ -27,8 +27,8 @@ namespace xenonis::algorithms {
 
     template <class InContainer> void remove_zeros(InContainer& data) noexcept
     {
-        auto first = data.crbegin();
-        auto last = data.crend();
+        auto first{data.crbegin()};
+        auto last{data.crend()};
 
         for (; first != last; ++first)
             if (*first != 0)

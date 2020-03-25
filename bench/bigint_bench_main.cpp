@@ -1,4 +1,5 @@
-// ---------- (C) 2018, 2019 fahaas ----------
+// ---------- (C) 2018-2020 Fabian Haas ----------
+
 #include <algorithms/arithmetic.hpp>
 #include <benchmark/benchmark.h>
 #include <bigint.hpp>
@@ -45,9 +46,9 @@ auto gen_ran_hex_str(std::size_t size)
 static void fibonacci_gen(std::function<void(int, std::size_t)> f)
 {
     std::set<int> values;
-    std::size_t i = 0;
-    int a = 2;
-    int b = 1;
+    std::size_t i{0};
+    int a{2};
+    int b{1};
     int tmp;
     do {
         tmp = a;
@@ -70,9 +71,9 @@ static void fibonacci_args(benchmark::internal::Benchmark* bench)
 
 static void fibonacci_offset_gen(std::function<void(int, std::size_t)> f)
 {
-    std::size_t i = 0;
-    int a = 8 << 16;
-    int b = 1;
+    std::size_t i{0};
+    int a{8 << 8};
+    int b{1};
     int tmp;
     do {
         tmp = a;
@@ -80,7 +81,7 @@ static void fibonacci_offset_gen(std::function<void(int, std::size_t)> f)
         b = tmp;
         f(a, i);
         ++i;
-    } while (a < (8 << 22));
+    } while (a < (8 << 20));
 }
 
 static void fibonacci_offset_args(benchmark::internal::Benchmark* bench)
@@ -92,7 +93,7 @@ static void fibonacci_offset_args(benchmark::internal::Benchmark* bench)
 static void p2_gen(std::function<void(int, std::size_t)> f)
 {
     std::set<int> values;
-    int n = 16;
+    int n{16};
     while (n < (8 << 18)) {
         n *= 2;
         values.insert(n - n / 4);
@@ -100,7 +101,7 @@ static void p2_gen(std::function<void(int, std::size_t)> f)
         values.insert(n + n / 4);
     }
 
-    std::size_t i = 0;
+    std::size_t i{0};
     for (auto e : values)
         f(e, i++);
 }
@@ -133,8 +134,8 @@ static void BM_add(benchmark::State& state)
     xenonis::bigint64 b_a(add_data.operator[](static_cast<std::size_t>(state.range(1))).first);
     xenonis::bigint64 b_b(add_data.operator[](static_cast<std::size_t>(state.range(1))).second);
 
-    auto a = b_a.data();
-    auto b = b_b.data();
+    auto a{b_a.data()};
+    auto b{b_b.data()};
 
     decltype(a) c(a.size() + 1);
 
@@ -142,8 +143,6 @@ static void BM_add(benchmark::State& state)
         if (xenonis::algorithms::add(a.begin(), b.begin(), b.end(), c.begin()))
             c.back() = 1;
         benchmark::DoNotOptimize(c);
-        // b_c = b_a + b_b;
-        // benchmark::DoNotOptimize(b_c);
     }
 
     state.counters["in"] = state.range(0);
@@ -207,8 +206,8 @@ static void BM_mul_karatsuba(benchmark::State& state)
     xenonis::bigint64 b_a(mul_data.operator[](static_cast<std::size_t>(state.range(1))).first);
     xenonis::bigint64 b_b(mul_data.operator[](static_cast<std::size_t>(state.range(1))).second);
 
-    auto a = b_a.data();
-    auto b = b_b.data();
+    auto a{b_a.data()};
+    auto b{b_b.data()};
     decltype(a) c;
 
     for (auto _ : state) {
@@ -231,8 +230,8 @@ static void BM_mul_naive(benchmark::State& state)
     xenonis::bigint64 b_a(mul_data.operator[](static_cast<std::size_t>(state.range(1))).first);
     xenonis::bigint64 b_b(mul_data.operator[](static_cast<std::size_t>(state.range(1))).second);
 
-    auto a = b_a.data();
-    auto b = b_b.data();
+    auto a{b_a.data()};
+    auto b{b_b.data()};
     decltype(a) c;
 
     for (auto _ : state) {
