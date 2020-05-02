@@ -4,7 +4,7 @@
 xenonis is a portable header-only C++17 library which implements a basic bigint class which supports addition, subtraction and multiplication. bigint can be constructed using integers and hex-strings.
 
 The library implements the naive addition, subtraction and multiplication using clean C++17 and
-additionally using x86_64 assembly. The [karatsuba](https://en.wikipedia.org/wiki/Karatsuba_algorithm) algorithm is implemented using only C++17. All 64-bit plattforms supported by Clang or GCC can be used.
+additionally using x86_64 assembly. The [Karatsuba](https://en.wikipedia.org/wiki/Karatsuba_algorithm) algorithm is implemented using only C++17. All 64-bit plattforms supported by Clang or GCC can be used.
 
 NOTE: the x86_64 assembly will be enabled automatically at compile-time (when on x86_64 using GCC or Clang). The code assumes that the `adox`, `adcx` instructions are supported. Please ensure the availability or disable the use of assembly by passing `-DXENONIS_USE_INLINE_ASM=OFF` to cmake.
 
@@ -52,7 +52,7 @@ make install #when using make
 A basic script to configure and build the library looks like this:
 
 ```bash
-git clone https://gitlab.com/fahaas/bigint.git #clone repo
+git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
 sh setup.sh # or setup.bat
 mkdir build #create build directory
@@ -86,7 +86,7 @@ sudo pip install conan #install conan
 Then to configure and build the library run this:
 
 ```bash
-git clone https://gitlab.com/fahaas/bigint.git #clone repo
+git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
 sh setup.sh
 mkdir build #create build directory
@@ -108,7 +108,7 @@ sudo pip install conan #install conan
 Then to configure and build the library run this:
 
 ```bash
-git clone https://gitlab.com/fahaas/bigint.git #clone repo
+git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
 sh setup.sh
 mkdir build #create build directory
