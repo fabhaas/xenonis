@@ -1,4 +1,11 @@
-﻿// ---------- (C) 2018-2020 Fabian Haas ----------
+﻿//******************************************************************************
+//* Copyright 2018-2020 Fabian Haas                                            *
+//*                                                                            *
+//* This Source Code Form is subject to the terms of the Mozilla Public        *
+//* License, v. 2.0. If a copy of the MPL was not distributed with this        *
+//* file, You can obtain one at https://mozilla.org/MPL/2.0/.                  *
+//******************************************************************************
+
 /*!
  *  \file arithmetic.hpp
  *  Implements the arithmetic algorithms used in bigint.hpp
