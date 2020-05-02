@@ -1,7 +1,7 @@
 # xenonis - a C++17 bigint implementation
 xenonis is a portable header-only C++17 library which implements a basic bigint class which supports addition, subtraction and multiplication. bigint can be constructed using integers and hex-strings.
 
-The library implements the naive addition, subtraction and multiplication using clean C++17 and additionally using x86_64 assembly. The [Karatsuba](https://en.wikipedia.org/wiki/Karatsuba_algorithm) algorithm is only implemented using C++17. All 64-bit plattforms supported by Clang or GCC can be used.
+The library implements the naive addition, subtraction and multiplication using clean C++17 and additionally using x86_64 assembly. The [Karatsuba](https://en.wikipedia.org/wiki/Karatsuba_algorithm) algorithm is implemented using only C++17. All 64-bit platforms supported by Clang or GCC can be used.
 
 NOTE: the x86_64 assembly will be enabled automatically at compile-time (when on x86_64 using GCC or Clang). The code assumes that the `adox`, `adcx` and `mulx` instructions are supported by the CPU. Please ensure the availability or disable the use of assembly by passing `-DXENONIS_USE_INLINE_ASM=OFF` to cmake.
 
@@ -26,7 +26,7 @@ int main()
 
 ## Installation
 
-### Requirements - all plattforms
+### Requirements - all platforms
 
 - cmake (https://cmake.org/)
 
@@ -43,7 +43,7 @@ make # make documentation
 make install #when using make
 ```
 
-### Building the tests and benchmarks - all plattforms
+### Building the tests and benchmarks - all platforms
 
 A basic script to configure and build the library looks like this:
 

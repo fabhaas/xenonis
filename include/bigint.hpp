@@ -7,8 +7,8 @@
 //******************************************************************************
 
 /*!
- *	\file bigint.hpp
- *	\brief A definition of the bigint class.
+ *  \file bigint.hpp
+ *  \brief A definition of the bigint class.
  *  \details NOTE: Requires at least a 64-bit unsigned integer resulting in no support for 32-bit builds.
  */
 #pragma once
