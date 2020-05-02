@@ -32,6 +32,8 @@ int main()
 
 - cmake supported generator (https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html)
 
+- OPTIONAL(to build the documentation): doxygen (http://www.doxygen.nl/)
+
 - OPTIONAL(to build the tests and benchmarks): conan (https://conan.io/)
 
 ### Installation
