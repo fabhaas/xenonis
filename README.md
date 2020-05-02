@@ -41,7 +41,7 @@ int main()
 
 ### Installation
 ```bash
-git clone https://gitlab.com/fahaas/bigint.git #clone repo
+git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
 cmake .. -G <generator>
 make install #when using make
