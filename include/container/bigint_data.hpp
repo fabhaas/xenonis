@@ -13,13 +13,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include "data_view.hpp"
 
 namespace xenonis::internal {
-    template <typename Value, typename Size> class data_view; //implemented in bigint_data_view.hpp
     template <typename Value, class Allocator = std::allocator<Value>> class bigint_data {
         using size_type = std::size_t;
-        friend class data_view<Value, size_type>;
         Allocator m_alloc;
         size_type m_size{0};
         size_type m_capacity{0};

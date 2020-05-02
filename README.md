@@ -13,13 +13,13 @@ Example:
 int main()
 {
     xenonis::bigint a("ffffffffffffffffff");
-    xenonis::bigint b("ffffffffffffffffff");
+    xenonis::bigint b("-ffffffffffffffffff"); // the hex-string may contain a -
 
     // print the result: 
     std::cout << a * b << '\n';
     
     // print length of the hex-string:
-    std::cout << (a * b).to_string().size() << '\n';
+    std::cout << (a - b + a).to_string().size() << '\n';
     return 0;
 }
 ```
@@ -39,6 +39,7 @@ int main()
 git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
 cmake .. -G <generator>
+make # make documentation
 make install #when using make
 ```
 
@@ -86,7 +87,8 @@ mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
     -DXENONIS_BUILD_BENCHMARKS=ON #generate build files in release mode
-make
+make # make documentation
+make install # install
 ```
 
 #### Fedora
@@ -107,7 +109,8 @@ mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
     -DXENONIS_BUILD_BENCHMARKS=ON #generate build files in release mode
-make
+make # make documentation
+make install # install
 ```
 
 ## TODO

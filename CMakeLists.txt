@@ -21,11 +21,7 @@ option(XENONIS_BUILD_TESTS "Build the tests" OFF)
 option(XENONIS_BUILD_BENCHMARKS "Build the benchmarks" OFF)
 option(XENONIS_USE_UINT128 "Use __int128 extension" ON)
 option(XENONIS_USE_INLINE_ASM "Use inline assembly" ON)
-if(CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]")
-  option(XENONIS_BUILD_DOC "Build documentation" ON)
-else()
-  option(XENONIS_BUILD_DOC "Build documentation" OFF)
-endif()
+option(XENONIS_BUILD_DOC "Build documentation" ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

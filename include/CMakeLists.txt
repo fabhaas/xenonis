@@ -17,7 +17,6 @@ set(BIGINT_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithms/util.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/integer_traits.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/container/bigint_data.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/container/data_view.hpp
     ${PROJECT_BINARY_DIR}/bigint_config.hpp)
 
 add_library(bigint INTERFACE)
@@ -40,5 +39,4 @@ install(
         ${CMAKE_CURRENT_SOURCE_DIR}/algorithms/util.hpp
   DESTINATION include/bigint/algorithms)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/container/bigint_data.hpp
-              ${CMAKE_CURRENT_SOURCE_DIR}/container/data_view.hpp
         DESTINATION include/bigint/container)
