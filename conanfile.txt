@@ -1,6 +1,7 @@
 [requires]
-gtest/1.8.1@bincrafters/stable
-google-benchmark/1.4.1@mpusz/stable
+gtest/1.8.1
+gmp/6.1.2
+benchmark/1.5.0
 
 [generators]
 cmake

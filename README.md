@@ -1,12 +1,10 @@
 # xenonis - a C++17 bigint implementation
-(C) 2018-2020 Fabian Haas
-
 xenonis is a portable header-only C++17 library which implements a basic bigint class which supports addition, subtraction and multiplication. bigint can be constructed using integers and hex-strings.
 
 The library implements the naive addition, subtraction and multiplication using clean C++17 and
-additionally using x86_64 assembly. The [karatsuba](https://en.wikipedia.org/wiki/Karatsuba_algorithm) algorithm is only implemented using C++17. All 64-bit plattforms supported by Clang or GCC can be used.
+additionally using x86_64 assembly. The [Karatsuba](https://en.wikipedia.org/wiki/Karatsuba_algorithm) algorithm is only implemented using C++17. All 64-bit plattforms supported by Clang or GCC can be used.
 
-NOTE: the x86_64 assembly will be enabled automatically at compile-time (when on x86_64 using GCC or Clang). The code assumes that the `adox`, `adcx` instructions are supported. Please ensure the availability or disable the use of assembly by passing `-DXENONIS_USE_INLINE_ASM=OFF` to cmake.
+NOTE: the x86_64 assembly will be enabled automatically at compile-time (when on x86_64 using GCC or Clang). The code assumes that the `adox`, `adcx` and `mulx` instructions are supported by the CPU. Please ensure the availability or disable the use of assembly by passing `-DXENONIS_USE_INLINE_ASM=OFF` to cmake.
 
 Example:
 ```cpp
@@ -37,11 +35,9 @@ int main()
 
 - OPTIONAL(to build the tests and benchmarks): conan (https://conan.io/)
 
-- OPTIONAL(to build the tests and benchmarks): the GNU MP library (https://gmplib.org)
-
 ### Installation
 ```bash
-git clone https://gitlab.com/fahaas/bigint.git #clone repo
+git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
 cmake .. -G <generator>
 make install #when using make
@@ -52,9 +48,8 @@ make install #when using make
 A basic script to configure and build the library looks like this:
 
 ```bash
-git clone https://gitlab.com/fahaas/bigint.git #clone repo
+git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
-sh setup.sh # or setup.bat
 mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G <generator> -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
@@ -86,9 +81,8 @@ sudo pip install conan #install conan
 Then to configure and build the library run this:
 
 ```bash
-git clone https://gitlab.com/fahaas/bigint.git #clone repo
+git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
-sh setup.sh
 mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
@@ -108,9 +102,8 @@ sudo pip install conan #install conan
 Then to configure and build the library run this:
 
 ```bash
-git clone https://gitlab.com/fahaas/bigint.git #clone repo
+git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd bigint
-sh setup.sh
 mkdir build #create build directory
 conan install .. #install libraries, internet access required
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
@@ -120,3 +113,6 @@ make
 
 ## TODO
 + check for support for adcx, adox and mulx instruction
+
+## License
+The library is licensed under the Mozilla Public License 2.0 (MPL-2.0). See LICENSE for more information.
