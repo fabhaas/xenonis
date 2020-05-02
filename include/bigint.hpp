@@ -374,6 +374,7 @@ namespace xenonis {
     using bigint32 = internal::bigint<std::uint32_t, internal::bigint_data<std::uint32_t>>;
     using bigint16 = internal::bigint<std::uint16_t, internal::bigint_data<std::uint16_t>>;
     using bigint8 = internal::bigint<std::uint8_t, internal::bigint_data<std::uint8_t>>;
-    using bigint = std::conditional_t<std::is_same_v<typename traits::uinteger<std::uintmax_t>::doubled, void>,
-                                    internal::bigint<std::uintmax_t, internal::bigint_data<std::uintmax_t>>, bigint32>;
+    using bigint =
+        std::conditional_t<std::is_same_v<typename traits::uinteger<std::uintmax_t>::doubled, void>,
+                           internal::bigint<std::uintmax_t, internal::bigint_data<std::uintmax_t>>, bigint32>;
 } // namespace xenonis

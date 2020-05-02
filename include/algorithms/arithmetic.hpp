@@ -403,12 +403,12 @@ namespace xenonis::algorithms {
             auto* b_halved{reinterpret_cast<halved*>(&b)};
             naive_mul(a_halved, a_halved + 2, b_halved, b_halved + 2, res, res + 4);
 
-            std::array<Value, 2> ret{{0,0}};
+            std::array<Value, 2> ret{{0, 0}};
             std::memcpy(ret.data(), res, sizeof(Value) * 2);
             return ret;
         } else {
             doubled res{static_cast<doubled>(a) * b};
-            std::array<Value, 2> ret{{0,0}};
+            std::array<Value, 2> ret{{0, 0}};
             std::memcpy(ret.data(), &res, sizeof(doubled));
             return ret;
         }
