@@ -39,7 +39,7 @@ int main()
 ### Installation
 ```bash
 git clone https://github.com/fabhaas/xenonis.git #clone repo
-cd bigint
+cd xenonis
 cmake .. -G <generator>
 make # make documentation
 make install #when using make
@@ -51,9 +51,8 @@ A basic script to configure and build the library looks like this:
 
 ```bash
 git clone https://github.com/fabhaas/xenonis.git #clone repo
-cd bigint
+cd xenonis
 mkdir build #create build directory
-conan install .. #install libraries, internet access required
 cmake .. -G <generator> -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
     -DXENONIS_BUILD_BENCHMARKS=ON #generate build files
 ninja #when using ninja as generator; build
@@ -84,9 +83,8 @@ Then to configure and build the library run this:
 
 ```bash
 git clone https://github.com/fabhaas/xenonis.git #clone repo
-cd bigint
+cd xenonis
 mkdir build #create build directory
-conan install .. #install libraries, internet access required
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
     -DXENONIS_BUILD_BENCHMARKS=ON #generate build files in release mode
 make # make documentation
@@ -106,9 +104,8 @@ Then to configure and build the library run this:
 
 ```bash
 git clone https://github.com/fabhaas/xenonis.git #clone repo
-cd bigint
+cd xenonis
 mkdir build #create build directory
-conan install .. #install libraries, internet access required
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
     -DXENONIS_BUILD_BENCHMARKS=ON #generate build files in release mode
 make # make documentation
