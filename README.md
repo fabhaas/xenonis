@@ -40,6 +40,7 @@ int main()
 ```bash
 git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd xenonis
+mkdir build && cd build #create build directory
 cmake .. -G <generator>
 make # make documentation
 make install #when using make
@@ -52,7 +53,7 @@ A basic script to configure and build the library looks like this:
 ```bash
 git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd xenonis
-mkdir build #create build directory
+mkdir build && cd build #create build directory
 cmake .. -G <generator> -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
     -DXENONIS_BUILD_BENCHMARKS=ON #generate build files
 ninja #when using ninja as generator; build
@@ -84,7 +85,7 @@ Then to configure and build the library run this:
 ```bash
 git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd xenonis
-mkdir build #create build directory
+mkdir build && cd build #create build directory
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
     -DXENONIS_BUILD_BENCHMARKS=ON #generate build files in release mode
 make # make documentation
@@ -105,7 +106,7 @@ Then to configure and build the library run this:
 ```bash
 git clone https://github.com/fabhaas/xenonis.git #clone repo
 cd xenonis
-mkdir build #create build directory
+mkdir build && cd build #create build directory
 cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DXENONIS_BUILD_TESTS=ON \
     -DXENONIS_BUILD_BENCHMARKS=ON #generate build files in release mode
 make # make documentation
