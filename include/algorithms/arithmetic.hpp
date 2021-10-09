@@ -139,7 +139,7 @@ namespace xenonis::algorithms {
      *  \param b_last iterator pointing to the last element of b.
      *  \returns the result
      */
-    template <class OutContainer, class InIter>
+    template <class OutContainer, class InIter, std::size_t threshold = 1024>
 #if !defined(XENONIS_INLINE_ASM_AMD64)
     constexpr
 #endif
@@ -238,8 +238,8 @@ namespace xenonis::algorithms {
             %=4:
                 adcq $0, %[carry]
             )"
-                : [ c ] "+r"(c_first), [ carry ] "+r"(carry) // DO NOT USE = constraint when using pointer
-                : [ a ] "r"(a_first), [ b ] "r"(b_first), [ size ] "rm"(size)
+                : [c] "+r"(c_first), [carry] "+r"(carry) // DO NOT USE = constraint when using pointer
+                : [a] "r"(a_first), [b] "r"(b_first), [size] "rm"(size)
                 : "rax", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "memory");
             return carry;
         } else {
@@ -314,9 +314,9 @@ namespace xenonis::algorithms {
             jno %=1b
             sbbq $0, %[carry]
             )"
-                : [ c ] "+r"(c_first), [ carry ] "+r"(carry) // DO NOT USE = constraint when using pointer
-                : [ a ] "r"(a_first), [ b ] "r"(b_first), [ size ] "r"(size),
-                  [ max ] "r"(std::numeric_limits<std::int64_t>::max())
+                : [c] "+r"(c_first), [carry] "+r"(carry) // DO NOT USE = constraint when using pointer
+                : [a] "r"(a_first), [b] "r"(b_first), [size] "r"(size),
+                  [max] "r"(std::numeric_limits<std::int64_t>::max())
                 : "rax", "rbx", "rcx", "rsi", "memory");
             return carry;
         } else {
@@ -358,8 +358,8 @@ namespace xenonis::algorithms {
             jno %=1b
             sbbq $0, %[carry]
             )"
-                : [ a ] "+r"(a_first), [ carry ] "+r"(carry) // DO NOT USE = constraint when using pointer
-                : [ b ] "r"(b_first), [ size ] "r"(size), [ max ] "r"(std::numeric_limits<std::int64_t>::max())
+                : [a] "+r"(a_first), [carry] "+r"(carry) // DO NOT USE = constraint when using pointer
+                : [b] "r"(b_first), [size] "r"(size), [max] "r"(std::numeric_limits<std::int64_t>::max())
                 : "rax", "rbx", "rcx", "rsi", "memory");
             return carry;
         } else {
@@ -480,8 +480,8 @@ namespace xenonis::algorithms {
                                 adox %%rax, %%r11
                                 mov %%r11, 8(%[out],%%rsi,8)
                         )"
-                        : [ out ] "+r"(out_first)
-                        : [ in ] "r"(a_first), [ digit ] "rm"(*b_first), [ size ] "r"(a_size - 1)
+                        : [out] "+r"(out_first)
+                        : [in] "r"(a_first), [digit] "rm"(*b_first), [size] "r"(a_size - 1)
                         : "rax", "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory");
 
                     // same in Intel syntax:
@@ -586,8 +586,8 @@ namespace xenonis::algorithms {
                                 adox %%rcx, %%r9
                                 mov %%r9, (%[out],%%rsi,8)
                         )"
-                        : [ out ] "+r"(out_first)
-                        : [ in ] "r"(a_first), [ digit ] "rm"(*b_first), [ size ] "r"(a_size)
+                        : [out] "+r"(out_first)
+                        : [in] "r"(a_first), [digit] "rm"(*b_first), [size] "r"(a_size)
                         : "rax", "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory");
 
                     // same in Intel syntax:
@@ -722,18 +722,18 @@ namespace xenonis::algorithms {
         return ret;
     }
 
-    template <class OutContainer, class InIter>
+    template <class OutContainer, class InIter, std::size_t threshold>
 #if !defined(XENONIS_INLINE_ASM_AMD64)
     constexpr
 #endif
         OutContainer
         karatsuba_mul(InIter a_first, InIter a_last, InIter b_first, InIter b_last)
     {
-        const auto a_size{std::distance(a_first, a_last)};
-        const auto b_size{std::distance(b_first, b_last)};
+        const auto a_size{static_cast<std::size_t>(std::distance(a_first, a_last))};
+        const auto b_size{static_cast<std::size_t>(std::distance(b_first, b_last))};
 
         // TODO: test different thresholds for when to use the naive multiplication
-        if (a_size <= 1024 || b_size <= 1024) {
+        if (a_size <= threshold || b_size <= threshold) {
             if (a_size < b_size) {
                 return naive_mul<OutContainer>(b_first, b_last, a_first, a_last);
             } else {
@@ -906,8 +906,8 @@ namespace xenonis::algorithms {
         };
 
         // calculate p3
-        auto p3_1{cp_add(a_l_first, a_l_last, a_h_first, a_h_last, limb_size, std::distance(a_h_first, a_h_last))};
-        auto p3_2{cp_add(b_l_first, b_l_last, b_h_first, b_h_last, limb_size, std::distance(b_h_first, b_h_last))};
+        auto p3_1{cp_add(a_l_first, a_l_last, a_h_first, a_h_last, limb_size, static_cast<std::size_t>(std::distance(a_h_first, a_h_last)))};
+        auto p3_2{cp_add(b_l_first, b_l_last, b_h_first, b_h_last, limb_size, static_cast<std::size_t>(std::distance(b_h_first, b_h_last)))};
 
         /*tg.run([&]() {*/ p3 = karatsuba_mul<OutContainer>(p3_1.begin(), p3_1.end(), p3_2.begin(), p3_2.end()); //});
         // tg.wait();

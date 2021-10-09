@@ -284,7 +284,7 @@ namespace xenonis::internal {
                 return *this;
             }
 
-            m_data = algorithms::naive_mul<Container>(m_data.cbegin(), m_data.cend(), other.m_data.cbegin(),
+            m_data = algorithms::karatsuba_mul<Container, decltype(m_data.cbegin())>(m_data.cbegin(), m_data.cend(), other.m_data.cbegin(),
                                                       other.m_data.cend());
 
             m_sign = m_sign != other.m_sign;

@@ -17,8 +17,8 @@ project(
 include(CTest)
 
 # options
-option(XENONIS_BUILD_TESTS "Build the tests" OFF)
-option(XENONIS_BUILD_BENCHMARKS "Build the benchmarks" OFF)
+option(XENONIS_BUILD_TESTS "Build the tests" ON)
+option(XENONIS_BUILD_BENCHMARKS "Build the benchmarks" ON)
 option(XENONIS_USE_UINT128 "Use __int128 extension" ON)
 option(XENONIS_USE_INLINE_ASM "Use inline assembly" ON)
 option(XENONIS_BUILD_DOC "Build documentation" ON)

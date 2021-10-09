@@ -27,27 +27,33 @@
                             for (std::size_t i_b{0}; i_b < this->ran_count; ++i_b) {                                   \
                                 auto ran_b{ran_dist(ran_engine)};                                                      \
                                 auto test = [&](bool signed_a, bool signed_b) {                                        \
-                                    mpz_class a;                                                                       \
-                                    mpz_ui_pow_ui(a.get_mpz_t(), base_a, exp_a);                                       \
-                                    a *= ran_a;                                                                        \
-                                    auto mp_a_str{std::string(signed_a ? "-" : "") + a.get_str(16)};                   \
+                                    mpz_t a;                                                                           \
+                                    mpz_init(a);                                                                       \
+                                    mpz_ui_pow_ui(a, base_a, exp_a);                                                   \
+                                    mpz_mul_ui(a, a, ran_a);                                                           \
+                                    std::unique_ptr<char> mp_a_tmp{mpz_get_str(NULL, 16, a)};                          \
+                                    auto mp_a_str{std::string(signed_a ? "-" : "") + mp_a_tmp.get()};                  \
                                     if (signed_a)                                                                      \
-                                        a *= -1;                                                                       \
+                                        mpz_neg(a, a);                                                                 \
                                                                                                                        \
-                                    mpz_class b;                                                                       \
-                                    mpz_ui_pow_ui(b.get_mpz_t(), base_b, exp_b);                                       \
-                                    b *= ran_b;                                                                        \
-                                    auto mp_b_str{std::string(signed_b ? "-" : "") + b.get_str(16)};                   \
+                                    mpz_t b;                                                                           \
+                                    mpz_init(b);                                                                       \
+                                    mpz_ui_pow_ui(b, base_b, exp_b);                                                   \
+                                    mpz_mul_ui(b, b, ran_b);                                                           \
+                                    std::unique_ptr<char> mp_b_tmp{mpz_get_str(NULL, 16, b)};                          \
+                                    auto mp_b_str{std::string(signed_b ? "-" : "") + mp_b_tmp.get()};                  \
                                     if (signed_b)                                                                      \
-                                        b *= -1;                                                                       \
+                                        mpz_neg(b, b);                                                                 \
                                                                                                                        \
                                     TypeParam b_a(mp_a_str);                                                           \
                                     TypeParam b_b(mp_b_str);                                                           \
                                                                                                                        \
-                                    ASSERT_EQ((a op b), (b_a op b_b)) << "b_a: " << b_a << '\n'                        \
-                                                                      << "b_b: " << b_b << '\n'                        \
-                                                                      << "mp_a: " << mp_a_str << '\n'                  \
-                                                                      << "mp_b: " << mp_b_str << '\n';                 \
+                                    ASSERT_EQ((mpz_cmp(a, b) op 0), (b_a op b_b)) << "b_a: " << b_a << '\n'            \
+                                                                                  << "b_b: " << b_b << '\n'            \
+                                                                                  << "mp_a: " << mp_a_str << '\n'      \
+                                                                                  << "mp_b: " << mp_b_str << '\n';     \
+                                    mpz_clear(a);                                                                      \
+                                    mpz_clear(b);                                                                      \
                                 };                                                                                     \
                                 test(false, false);                                                                    \
                                 test(true, false);                                                                     \
@@ -76,27 +82,35 @@
                             for (std::size_t i_b{0}; i_b < this->ran_count; ++i_b) {                                   \
                                 auto ran_b{ran_dist(ran_engine)};                                                      \
                                 auto test = [&](bool signed_a, bool signed_b) {                                        \
-                                    mpz_class a;                                                                       \
-                                    mpz_ui_pow_ui(a.get_mpz_t(), base_a, exp_a);                                       \
-                                    a *= ran_a;                                                                        \
-                                    auto mp_a_str{std::string(signed_a ? "-" : "") + a.get_str(16)};                   \
-                                    a *= signed_a ? -1 : 1;                                                            \
+                                    mpz_t a;                                                                           \
+                                    mpz_init(a);                                                                       \
+                                    mpz_ui_pow_ui(a, base_a, exp_a);                                                   \
+                                    mpz_mul_ui(a, a, ran_a);                                                           \
+                                    std::unique_ptr<char> mp_a_tmp{mpz_get_str(NULL, 16, a)};                          \
+                                    auto mp_a_str{std::string(signed_a ? "-" : "") + mp_a_tmp.get()};                  \
+                                    if (signed_a)                                                                      \
+                                        mpz_neg(a, a);                                                                 \
                                                                                                                        \
-                                    mpz_class b;                                                                       \
-                                    mpz_ui_pow_ui(b.get_mpz_t(), base_b, exp_b);                                       \
-                                    b *= ran_b;                                                                        \
-                                    auto mp_b_str{std::string(signed_b ? "-" : "") + b.get_str(16)};                   \
-                                    b *= signed_b ? -1 : 1;                                                            \
+                                    mpz_t b;                                                                           \
+                                    mpz_init(b);                                                                       \
+                                    mpz_ui_pow_ui(b, base_b, exp_b);                                                   \
+                                    mpz_mul_ui(b, b, ran_b);                                                           \
+                                    std::unique_ptr<char> mp_b_tmp{mpz_get_str(NULL, 16, b)};                          \
+                                    auto mp_b_str{std::string(signed_b ? "-" : "") + mp_b_tmp.get()};                  \
+                                    if (signed_b)                                                                      \
+                                        mpz_neg(b, b);                                                                 \
                                                                                                                        \
                                     TypeParam b_a(mp_a_str);                                                           \
                                     TypeParam b_b(mp_b_str);                                                           \
                                                                                                                        \
-                                    mpz_class c;                                                                       \
-                                    c = a op b;                                                                        \
-                                    bool mp_c_signed{sgn(c) == -1};                                                    \
+                                    mpz_t c;                                                                           \
+                                    mpz_init(c);                                                                       \
+                                    mpz_##name_(c, a, b);                                                              \
+                                    bool mp_c_signed{mpz_sgn(c) == -1};                                                \
                                     if (mp_c_signed)                                                                   \
-                                        c *= -1;                                                                       \
-                                    auto mp_c_str{std::string(mp_c_signed ? "-" : "") + c.get_str(16)};                \
+                                        mpz_neg(c, c);                                                                 \
+                                    std::unique_ptr<char> mp_c_tmp{mpz_get_str(NULL, 16, c)};                          \
+                                    auto mp_c_str{std::string(mp_c_signed ? "-" : "") + mp_c_tmp.get()};               \
                                                                                                                        \
                                     auto b_c{b_a op b_b};                                                              \
                                                                                                                        \
@@ -104,6 +118,9 @@
                                                                          << "b_b: " << b_b << '\n'                     \
                                                                          << "mp_a: " << mp_a_str << '\n'               \
                                                                          << "mp_b: " << mp_b_str << '\n';              \
+                                    mpz_clear(a);                                                                      \
+                                    mpz_clear(b);                                                                      \
+                                    mpz_clear(c);                                                                      \
                                 };                                                                                     \
                                 test(false, false);                                                                    \
                                 test(true, false);                                                                     \
@@ -117,7 +134,7 @@
         }                                                                                                              \
     }
 
-#define BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(name_, T)                                                                    \
+#define BIGINT_UTIL_UI_CONSTRUCTOR_TEST_CASE(name_, T)                                                                 \
     TYPED_TEST(util_bigint_test, name_)                                                                                \
     {                                                                                                                  \
         std::random_device ran_device;                                                                                 \
@@ -127,12 +144,41 @@
         for (std::size_t i{0}; i < this->ran_count * this->ran_count; ++i) {                                           \
             auto ran = ran_dist(ran_engine);                                                                           \
                                                                                                                        \
-            mpz_class a;                                                                                               \
-            a = ran;                                                                                                   \
+            mpz_t a;                                                                                                   \
+            mpz_init(a);                                                                                               \
+            mpz_set_ui(a, ran);                                                                                        \
+                                                                                                                       \
+            std::unique_ptr<char> mp_a_str{mpz_get_str(NULL, 16, a)};                                                  \
                                                                                                                        \
             TypeParam b_a(ran);                                                                                        \
                                                                                                                        \
-            ASSERT_EQ(b_a.to_string(), a.get_str(16)) << "ran:\t\t" << ran << '\n';                                    \
+            ASSERT_EQ(b_a.to_string(), mp_a_str.get()) << "ran:\t\t" << ran << '\n';                                   \
+                                                                                                                       \
+            mpz_clear(a);                                                                                              \
+        }                                                                                                              \
+    }
+
+#define BIGINT_UTIL_SI_CONSTRUCTOR_TEST_CASE(name_, T)                                                                 \
+    TYPED_TEST(util_bigint_test, name_)                                                                                \
+    {                                                                                                                  \
+        std::random_device ran_device;                                                                                 \
+        std::default_random_engine ran_engine(ran_device());                                                           \
+        std::uniform_int_distribution<T> ran_dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());       \
+                                                                                                                       \
+        for (std::size_t i{0}; i < this->ran_count * this->ran_count; ++i) {                                           \
+            auto ran = ran_dist(ran_engine);                                                                           \
+                                                                                                                       \
+            mpz_t a;                                                                                                   \
+            mpz_init(a);                                                                                               \
+            mpz_set_si(a, ran);                                                                                        \
+                                                                                                                       \
+            std::unique_ptr<char> mp_a_str{mpz_get_str(NULL, 16, a)};                                                  \
+                                                                                                                       \
+            TypeParam b_a(ran);                                                                                        \
+                                                                                                                       \
+            ASSERT_EQ(b_a.to_string(), mp_a_str.get()) << "ran:\t\t" << ran << '\n';                                   \
+                                                                                                                       \
+            mpz_clear(a);                                                                                              \
         }                                                                                                              \
     }
 
@@ -172,19 +218,23 @@ TYPED_TEST(util_bigint_test, to_string)
             for (std::size_t i{0}; i < this->ran_count; ++i) {
                 auto ran{ran_dist(ran_engine)};
                 auto test = [&](bool sign) {
-                    mpz_class a;
-                    mpz_ui_pow_ui(a.get_mpz_t(), base, exp);
-                    a *= ran;
-                    auto mp_a_str{std::string(sign ? "-" : "") + a.get_str(16)};
+                    mpz_t a;
+                    mpz_init(a);
+                    mpz_ui_pow_ui(a, base, exp);
+                    mpz_mul_ui(a, a, ran);
+
+                    auto mp_a_str{std::string(base == 0 ? "" : (sign ? "-" : "")) +
+                                  std::unique_ptr<char>{mpz_get_str(NULL, 16, a)}.get()};
                     if (sign)
-                        a *= -1;
+                        mpz_neg(a, a);
 
                     TypeParam b_a(mp_a_str);
 
-                    ASSERT_EQ(b_a.to_string(), a.get_str(16)) << "base:\t\t" << base << '\n'
-                                                              << "exponent:\t" << exp << '\n'
-                                                              << "random:\t\t" << ran << '\n'
-                                                              << "sign:\t\t" << std::boolalpha << sign << '\n';
+                    ASSERT_EQ(b_a.to_string(), mp_a_str) << "base:\t\t" << base << '\n'
+                                                         << "exponent:\t" << exp << '\n'
+                                                         << "random:\t\t" << ran << '\n'
+                                                         << "sign:\t\t" << std::boolalpha << sign << '\n';
+                    mpz_clear(a);
                 };
                 test(false);
                 test(true);
@@ -203,14 +253,14 @@ BIGINT_ARITHMETIC_OPERATOR_TEST_CASE(add, +)
 BIGINT_ARITHMETIC_OPERATOR_TEST_CASE(sub, -)
 BIGINT_ARITHMETIC_OPERATOR_TEST_CASE(mul, *)
 
-BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(construct_u64, std::uint64_t)
-BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(construct_u32, std::uint32_t)
-BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(construct_u16, std::uint16_t)
-BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(construct_u8, std::uint8_t)
-BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(construct_i64, std::int64_t)
-BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(construct_i32, std::int32_t)
-BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(construct_i16, std::int16_t)
-BIGINT_UTIL_CONSTRUCTOR_TEST_CASE(construct_i8, std::int8_t)
+BIGINT_UTIL_UI_CONSTRUCTOR_TEST_CASE(construct_u64, std::uint64_t)
+BIGINT_UTIL_UI_CONSTRUCTOR_TEST_CASE(construct_u32, std::uint32_t)
+BIGINT_UTIL_UI_CONSTRUCTOR_TEST_CASE(construct_u16, std::uint16_t)
+BIGINT_UTIL_UI_CONSTRUCTOR_TEST_CASE(construct_u8, std::uint8_t)
+BIGINT_UTIL_SI_CONSTRUCTOR_TEST_CASE(construct_i64, std::int64_t)
+BIGINT_UTIL_SI_CONSTRUCTOR_TEST_CASE(construct_i32, std::int32_t)
+BIGINT_UTIL_SI_CONSTRUCTOR_TEST_CASE(construct_i16, std::int16_t)
+BIGINT_UTIL_SI_CONSTRUCTOR_TEST_CASE(construct_i8, std::int8_t)
 
 int main(int argc, char** argv)
 {
